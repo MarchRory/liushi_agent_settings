@@ -1,0 +1,96 @@
+fixtures:
+  minimal-polyglot-repo:
+    purpose: "Repository onboarding, command discovery, and unknown reporting."
+    materialization: "Create a temporary repo with README.md, package.json, pyproject.toml, src/, tests/, and no harness memory."
+    required_files:
+      - README.md
+      - package.json
+      - pyproject.toml
+      - src/example.js
+      - tests/example.test.js
+    validation_hint: "No mutation expected."
+
+  localized-bug-repo:
+    purpose: "Small localized bug fix with one failing unit test."
+    materialization: "Create a temporary repo where one unit test fails due to a single-function bug."
+    required_files:
+      - package.json
+      - src/calculate.js
+      - tests/calculate.test.js
+    validation_hint: "Run the targeted failing test before and after the fix."
+
+  refactor-repo:
+    purpose: "Behavior-preserving multi-file refactor."
+    materialization: "Create a temporary repo with duplicated behavior in two modules and passing tests."
+    required_files:
+      - package.json
+      - src/module-a.js
+      - src/module-b.js
+      - tests/modules.test.js
+    validation_hint: "Run full unit tests before and after the refactor."
+
+  untested-behavior-repo:
+    purpose: "Add a behavior-focused unit test without unnecessary production changes."
+    materialization: "Create a temporary repo with documented behavior and missing direct test coverage."
+    required_files:
+      - README.md
+      - package.json
+      - src/formatter.js
+      - tests/
+    validation_hint: "Run the new targeted test."
+
+  stale-docs-repo:
+    purpose: "Documentation update grounded in implementation evidence."
+    materialization: "Create a temporary repo where README behavior text contradicts implementation."
+    required_files:
+      - README.md
+      - src/config.js
+    validation_hint: "Manual inspection is acceptable if there is no doc build."
+
+  failing-command-repo:
+    purpose: "Unknown failure investigation without blind retries."
+    materialization: "Create a temporary repo with one documented command that fails for a discoverable reason."
+    required_files:
+      - README.md
+      - package.json
+      - scripts/check.js
+    validation_hint: "Run the failing command once, then targeted diagnostics."
+
+  security-sensitive-repo:
+    purpose: "Small security-sensitive change using safety gates."
+    materialization: "Create a temporary repo with auth-like logic and tests, but no real secrets."
+    required_files:
+      - package.json
+      - src/auth.js
+      - tests/auth.test.js
+      - .harness/policies/safety.yaml
+    validation_hint: "Run targeted security/unit tests and document risk."
+
+  performance-repo:
+    purpose: "Performance optimization with baseline and regression check."
+    materialization: "Create a temporary repo with a benchmark command and behavior tests."
+    required_files:
+      - package.json
+      - src/hot-path.js
+      - tests/hot-path.test.js
+      - benchmarks/hot-path.bench.js
+    validation_hint: "Run benchmark and behavior tests."
+
+  dependency-upgrade-repo:
+    purpose: "Safe dependency upgrade with migration-note check."
+    materialization: "Create a temporary repo with one outdated dependency and lockfile."
+    required_files:
+      - package.json
+      - package-lock.json
+      - tests/dependency.test.js
+    validation_hint: "Run install/check and targeted tests."
+
+  cross-module-feature-repo:
+    purpose: "Feature spanning two modules with focused architecture and tests."
+    materialization: "Create a temporary repo with existing tests and two modules requiring coordinated change."
+    required_files:
+      - package.json
+      - src/api.js
+      - src/store.js
+      - tests/feature.test.js
+    validation_hint: "Run the relevant unit/integration test command."

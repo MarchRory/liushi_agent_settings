@@ -1,0 +1,10 @@
+specialist_output:
+  role: "implementer"
+  summary: "Implemented scoped changes."
+  findings: []
+  recommendations: []
+  risks: []
+  evidence: []
+  confidence: "medium"
+  confidence_basis: "Based on changed files and validation output."
+  follow_up_needed: []

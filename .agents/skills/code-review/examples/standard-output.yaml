@@ -1,0 +1,9 @@
+review:
+  summary: "Review scope and outcome."
+  blocking_issues: []
+  non_blocking_issues: []
+  risks:
+    - "Unverified behavior or residual uncertainty."
+  validation_gaps:
+    - "Command not run or evidence not available."
+  recommendation: "revise"

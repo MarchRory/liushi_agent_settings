@@ -1,0 +1,13 @@
+eval_record:
+  task_id: "repo_onboarding_summary"
+  configuration: "full_harness"
+  fixture_ref: ".harness/fixtures/manifest.yaml#minimal-polyglot-repo"
+  prompt: ""
+  scores: {}
+  weighted_score: 0.0
+  commands_run: []
+  artifacts: []
+  trace_ref: ""
+  failures: []
+  lessons: []
+  final_status: "review_required"

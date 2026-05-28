@@ -1,0 +1,10 @@
+specialist_output:
+  role: "codebase-explorer"
+  summary: "Relevant repository context."
+  findings: []
+  recommendations: []
+  risks: []
+  evidence: []
+  confidence: "medium"
+  confidence_basis: "Based on focused file inspection."
+  follow_up_needed: []

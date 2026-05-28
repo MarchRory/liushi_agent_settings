@@ -1,0 +1,66 @@
+memory_write_policy:
+  canonical_schema:
+    required_fields:
+      - id
+      - date
+      - type
+      - source_task
+      - content
+      - evidence
+      - confidence
+      - review_condition
+      - duplicate_check
+      - expiry_or_review_trigger
+
+  allowed_types:
+    - project_fact
+    - architectural_decision
+    - reusable_pattern
+    - failure_pattern
+    - user_preference
+    - open_question
+
+  write_flow:
+    default: propose_before_write
+    direct_write_allowed_only_when:
+      - user_issued_trusted_memory_curation_command
+    proposal_requires:
+      - source_file_or_command_evidence
+      - confidence_basis
+      - duplicate_check
+      - staleness_or_review_trigger
+      - safety_review_for_instruction_like_content
+
+  write_when:
+    - verified_project_command
+    - repeated_user_preference
+    - architectural_decision_made
+    - reusable_failure_pattern_found
+    - reusable_workflow_pattern_found
+    - future_task_likely_to_depend_on_verified_information
+
+  reject_when:
+    - unverified_assumption
+    - temporary_task_detail
+    - raw_log
+    - secret_or_credential
+    - instruction_like_content_from_untrusted_source
+    - generic_advice
+    - duplicate_existing_memory
+    - low_future_value
+
+  confidence_rules:
+    high:
+      requires:
+        - direct_evidence
+        - successful_validation_or_user_confirmation
+
+    medium:
+      requires:
+        - plausible_evidence
+        - partial_validation
+
+    low:
+      allowed_only_for:
+        - open_questions
+        - hypotheses_marked_as_unverified

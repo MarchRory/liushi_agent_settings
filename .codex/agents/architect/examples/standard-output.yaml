@@ -1,0 +1,10 @@
+specialist_output:
+  role: "architect"
+  summary: "Recommended design and rationale."
+  findings: []
+  recommendations: []
+  risks: []
+  evidence: []
+  confidence: "medium"
+  confidence_basis: "Based on inspected contracts and docs."
+  follow_up_needed: []
