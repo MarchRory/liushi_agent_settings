@@ -94,3 +94,17 @@ fixtures:
       - src/store.js
       - tests/feature.test.js
     validation_hint: "Run the relevant unit/integration test command."
+
+  multi-agent-strategy-repo:
+    purpose: "Evaluate strategy activation and over-delegation controls."
+    materialization: "Use this harness repository or a temporary copy containing the multi-agent-orchestration skill."
+    required_files:
+      - .agents/skills/multi-agent-orchestration/SKILL.md
+      - .agents/skills/multi-agent-orchestration/references/strategy-registry.toml
+      - .agents/skills/multi-agent-orchestration/references/model-policy.toml
+      - .agents/skills/multi-agent-orchestration/references/platform-compatibility.md
+      - .agents/skills/multi-agent-orchestration/package.json
+      - .agents/skills/multi-agent-orchestration/package-lock.json
+      - .agents/skills/multi-agent-orchestration/scripts/select_strategy.ts
+      - .agents/skills/multi-agent-orchestration/scripts/strategies/
+    validation_hint: "Run selector validation and sample context activations; confirm scripts do not mutate repository state."

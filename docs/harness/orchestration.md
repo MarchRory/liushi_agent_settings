@@ -4,6 +4,8 @@
 
 This document defines how the lead agent decomposes complex tasks and coordinates specialist agents without over-delegating.
 
+The operational strategy selector lives in `.agents/skills/multi-agent-orchestration/`. Treat this document as the human-readable protocol layer; use the skill registry and scripts when a task needs strategy activation, machine-checkable fields, or an activation packet.
+
 ## Principles
 
 - Start lead-only.
@@ -12,6 +14,17 @@ This document defines how the lead agent decomposes complex tasks and coordinate
 - Keep specialist handoffs concrete and source-backed.
 - Treat specialist output as evidence, not authority.
 - The lead remains accountable for integration, safety, and final claims.
+
+## Strategy Activation
+
+Use `$multi-agent-orchestration` when the lead needs to choose among orchestration patterns. The skill provides:
+
+- `references/strategy-registry.toml` for the strategy pool.
+- `references/model-policy.toml` for runtime model-selection hints.
+- `scripts/select_strategy.ts` for advisory strategy selection.
+- `scripts/strategies/*.ts` for per-strategy activation packets.
+
+Scripts are read-only helpers. They do not start agents, call external services, or mutate the repository. The lead reviews every packet and starts specialists manually.
 
 ## Role Pools
 

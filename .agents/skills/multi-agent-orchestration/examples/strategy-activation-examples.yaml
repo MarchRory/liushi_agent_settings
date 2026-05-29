@@ -1,0 +1,101 @@
+examples:
+  - strategy_id: "lead-only-default"
+    context:
+      task_summary: "Answer a local repository question after reading one file."
+      signals: ["small_task"]
+    expected_activation:
+      candidate_agents: []
+      max_agents: 0
+
+  - strategy_id: "parallel-research-swarm"
+    context:
+      task_summary: "Compare current multi-agent orchestration practices across official docs and papers."
+      requires_research: true
+      parallelizable: true
+      signals: ["multiple_independent_research_threads"]
+    expected_activation:
+      candidate_agents: ["researcher", "critic", "reviewer"]
+      required_evidence: ["source_list", "source_priority", "date_or_version_context", "uncertainty_notes"]
+
+  - strategy_id: "supervisor-router"
+    context:
+      task_summary: "Route work across repository inspection, policy review, and implementation."
+      signals: ["routing_needed", "multiple_domains"]
+    expected_activation:
+      candidate_agents: ["codebase-explorer", "researcher", "architect", "implementer", "tester", "reviewer", "critic", "memory-curator"]
+
+  - strategy_id: "sop-assembly-line"
+    context:
+      task_summary: "Implement a multi-stage feature requiring design, code, tests, and review."
+      requires_edit: true
+      validation_available: true
+      signals: ["multi_stage_delivery"]
+    expected_activation:
+      parallelism: "sequential"
+      required_evidence: ["stage_plan", "stage_exit_gates", "validation_path"]
+
+  - strategy_id: "debate-critic-panel"
+    context:
+      task_summary: "Choose between two durable architecture directions with high failure cost."
+      signals: ["high_uncertainty", "high_failure_cost"]
+    expected_activation:
+      candidate_agents: ["architect", "critic", "reviewer"]
+
+  - strategy_id: "reviewer-tester-loop"
+    context:
+      task_summary: "Modify policy and run validation before final report."
+      requires_edit: true
+      validation_available: true
+    expected_activation:
+      candidate_agents: ["tester", "reviewer", "critic"]
+
+  - strategy_id: "batch-map-reduce"
+    context:
+      task_summary: "Scan many independent agent files for schema consistency."
+      parallelizable: true
+      signals: ["many_independent_items"]
+    expected_activation:
+      parallelism: "parallel_map_then_reduce"
+      required_evidence: ["item_partition", "per_item_output_schema", "reduce_rule"]
+
+  - strategy_id: "selector-group-chat"
+    context:
+      task_summary: "Explore a nonlinear investigation where the next useful specialist is not known upfront."
+      signals: ["dynamic_next_speaker_needed", "nonlinear_exploration"]
+    expected_activation:
+      required_evidence: ["turn_budget", "speaker_selection_rule", "lead_checkpoint_rule"]
+
+  - strategy_id: "human-approval-gate"
+    context:
+      task_summary: "Prepare to delete a production resource."
+      operation: "delete"
+      target: "production cloud resource"
+      sensitive_domains: ["production_deployment", "cloud_resource_deletion"]
+      risks: ["destructive cloud delete"]
+      safer_alternative: "perform a read-only audit and request exact approval before deletion"
+    expected_activation:
+      required_evidence: ["exact_operation", "exact_target_path_or_resource", "risk_statement", "safer_alternative"]
+
+  - strategy_id: "human-approval-gate"
+    context:
+      task_summary: "delete production database"
+    expected_activation:
+      eligible: false
+      matched_signals: ["high_risk_operation"]
+      missing_evidence: ["exact_operation", "exact_target_path_or_resource", "risk_statement", "safer_alternative"]
+      recommended_action: "lead_decision_required_no_auto_selection"
+
+  - strategy_id: "no-eligible-strategy"
+    context:
+      signals: ["external_research_required"]
+    expected_activation:
+      eligible: false
+      recommended_action: "lead_decision_required_no_auto_selection"
+
+  - strategy_id: "no-eligible-strategy"
+    context:
+      task_summary: "Answer a tiny question, but the user also asks for external research."
+      signals: ["small_task", "external_research_required"]
+    expected_activation:
+      eligible: false
+      recommended_action: "lead_decision_required_no_auto_selection"

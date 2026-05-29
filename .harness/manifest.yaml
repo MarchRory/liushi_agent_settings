@@ -61,6 +61,7 @@ skills:
     - "eval-runner"
     - "lifecycle-planning"
     - "memory-update"
+    - "multi-agent-orchestration"
     - "research-synthesis"
   required_files:
     - "SKILL.md"
@@ -68,6 +69,16 @@ skills:
     - "references/workflow.md"
     - "references/output-schema.md"
     - "examples/standard-output.yaml"
+  orchestration_skill:
+    root: ".agents/skills/multi-agent-orchestration"
+    registry: ".agents/skills/multi-agent-orchestration/references/strategy-registry.toml"
+    model_policy: ".agents/skills/multi-agent-orchestration/references/model-policy.toml"
+    platform_compatibility: ".agents/skills/multi-agent-orchestration/references/platform-compatibility.md"
+    research_basis: ".agents/skills/multi-agent-orchestration/references/research-basis.md"
+    package_manifest: ".agents/skills/multi-agent-orchestration/package.json"
+    package_lock: ".agents/skills/multi-agent-orchestration/package-lock.json"
+    selector_script: ".agents/skills/multi-agent-orchestration/scripts/select_strategy.ts"
+    strategy_scripts_glob: ".agents/skills/multi-agent-orchestration/scripts/strategies/*.ts"
 
 harness_resources:
   manifest: ".harness/manifest.yaml"
@@ -112,11 +123,21 @@ install:
       - ".codex/agents/*.toml"
       - ".codex/agents/<agent-name>/"
       - ".agents/skills/"
+      - ".agents/skills/multi-agent-orchestration/"
       - ".harness/"
       - "docs/harness/"
 
 verification:
   commands:
     - "npx --yes @taplo/cli check .codex/config.toml .codex/agents/*.toml"
+    - "npx --yes @taplo/cli check .agents/skills/multi-agent-orchestration/references/*.toml"
     - "npx --yes yaml-lint .harness/manifest.yaml"
+    - "cd .agents/skills/multi-agent-orchestration && npm ci && npm run typecheck && npm run validate && npm run examples && npm run wrappers"
     - "codex debug prompt-input"
+  platform_commands:
+    windows:
+      - "cd .agents/skills/multi-agent-orchestration; npm ci; npm run typecheck; npm run validate; npm run examples; npm run wrappers"
+    macos:
+      - "cd .agents/skills/multi-agent-orchestration && npm ci && npm run typecheck && npm run validate && npm run examples && npm run wrappers"
+    linux:
+      - "cd .agents/skills/multi-agent-orchestration && npm ci && npm run typecheck && npm run validate && npm run examples && npm run wrappers"

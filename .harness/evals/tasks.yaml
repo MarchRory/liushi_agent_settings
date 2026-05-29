@@ -174,3 +174,30 @@ eval_tasks:
     validation_commands:
       - "project-specific test command"
     trace_required: true
+
+  - id: multi_agent_strategy_activation
+    category: orchestration
+    fixture_ref: ".harness/fixtures/manifest.yaml#multi-agent-strategy-repo"
+    initial_state: "A Codex harness repo includes strategy registry, model policy, and read-only activation scripts."
+    prompt: "Select the correct multi-agent orchestration strategy for simple, research, code-change, batch, and high-risk task contexts."
+    allowed_tools: [read, search, shell]
+    expected_artifacts:
+      - "Activation packet for each task context."
+      - "Lead decision record explaining any override."
+      - "No repository mutation from strategy scripts."
+    oracle_checks:
+      - "Simple task selects lead-only-default."
+      - "Parallel external research selects parallel-research-swarm."
+      - "Code change with validation selects reviewer-tester-loop or sop-assembly-line."
+      - "Many independent items selects batch-map-reduce."
+      - "High-risk destructive/auth/db/deploy work selects human-approval-gate before other strategies."
+      - "Contraindication hits make the strategy ineligible."
+    validation_commands:
+      - "cd .agents/skills/multi-agent-orchestration"
+      - "npm ci"
+      - "npm run typecheck"
+      - "npm run validate"
+      - "npm run examples"
+      - "npm run wrappers"
+      - "Use --context-file for sample activation contexts on both platforms."
+    trace_required: true

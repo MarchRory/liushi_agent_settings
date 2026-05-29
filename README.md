@@ -32,6 +32,8 @@ Each skill is a folder, not a single large prompt. The standard layout is:
 
 Keep `SKILL.md` concise. Put long procedures, schemas, examples, and future extensions in `references/` or `examples/`.
 
+The built-in `multi-agent-orchestration` skill is the strategy entrypoint for Lead+Sub coordination. It keeps the strategy pool in TOML, uses read-only TypeScript/Node scripts to generate activation packets, and leaves final strategy startup to the lead agent. Run it through the skill-local npm scripts on Windows, macOS, and Linux.
+
 Each Codex preset agent keeps its runtime-discoverable TOML at `.codex/agents/<name>.toml`. Do not move those files into subdirectories. Put expansion material in the matching sidecar directory:
 
 ```txt

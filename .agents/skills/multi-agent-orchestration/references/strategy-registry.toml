@@ -1,0 +1,154 @@
+schema_version = "1.0"
+
+[[strategies]]
+id = "lead-only-default"
+name = "Lead-only default"
+priority = 10
+use_when = ["The task is small, local, low risk, and does not need independent specialist judgment.", "The next action is blocked on immediate local context recovery or a direct answer."]
+avoid_when = ["External research, high-risk changes, broad review, or multiple independent work items are required."]
+required_signals = ["small_task"]
+contraindications = ["high_risk_operation", "external_research_required", "many_independent_items", "implementation_required_with_review"]
+candidate_agents = []
+max_agents = 0
+parallelism = "none"
+required_evidence = ["reason_lead_only_is_sufficient", "risk_is_low"]
+stop_conditions = ["task_completed_by_lead", "new_signal_requires_specialist"]
+validation_required = ["answer_or_change_reviewed_by_lead"]
+model_selection_hints = ["Use the current lead model; do not spawn specialists for cost-free appearances."]
+script = "scripts/strategies/lead-only-default.ts"
+
+[[strategies]]
+id = "parallel-research-swarm"
+name = "Parallel research swarm"
+priority = 70
+use_when = ["The task needs recent or external knowledge from several independent directions.", "Different source families can be investigated independently."]
+avoid_when = ["The user disallows external research.", "The question is stable, local, and answerable from the repository."]
+required_signals = ["external_research_required", "multiple_independent_research_threads"]
+contraindications = ["user_disallows_research", "answer_is_local_and_stable"]
+candidate_agents = ["researcher", "critic", "reviewer"]
+max_agents = 3
+parallelism = "parallel"
+required_evidence = ["source_list", "source_priority", "date_or_version_context", "uncertainty_notes"]
+stop_conditions = ["sources_converge", "research_budget_exhausted", "primary_sources_missing"]
+validation_required = ["cite_primary_sources", "separate_findings_from_inference"]
+model_selection_hints = ["Use stronger reasoning for synthesis and lower-cost models for narrow source collection when quality is not at risk."]
+script = "scripts/strategies/parallel-research-swarm.ts"
+
+[[strategies]]
+id = "supervisor-router"
+name = "Supervisor router"
+priority = 55
+use_when = ["The task spans multiple domains or tool scopes and needs explicit routing.", "Different specialists should receive different constraints or permissions."]
+avoid_when = ["A single obvious specialist can handle the whole task."]
+required_signals = ["routing_needed", "multiple_domains"]
+contraindications = ["single_obvious_owner"]
+candidate_agents = ["codebase-explorer", "researcher", "architect", "implementer", "tester", "reviewer", "critic", "memory-curator"]
+max_agents = 4
+parallelism = "mixed"
+required_evidence = ["routing_reason", "agent_scope_boundaries", "handoff_constraints"]
+stop_conditions = ["all_routes_completed", "routing_conflict_unresolved", "lead_cannot_integrate"]
+validation_required = ["lead_reviews_each_route", "lead_records_conflicts"]
+model_selection_hints = ["Match model strength to each routed subtask; document why each route needs a specialist."]
+script = "scripts/strategies/supervisor-router.ts"
+
+[[strategies]]
+id = "sop-assembly-line"
+name = "SOP assembly line"
+priority = 75
+use_when = ["The task has stable stages such as context, design, implementation, testing, and review.", "Stage outputs can become inputs to later specialists."]
+avoid_when = ["The task is a small edit or direct answer.", "Stages would add ceremony without reducing risk."]
+required_signals = ["implementation_required", "multi_stage_delivery"]
+contraindications = ["small_task", "no_validation_path"]
+candidate_agents = ["codebase-explorer", "architect", "implementer", "tester", "reviewer"]
+max_agents = 4
+parallelism = "sequential"
+required_evidence = ["stage_plan", "stage_exit_gates", "validation_path"]
+stop_conditions = ["stage_gate_failed", "scope_changed", "all_stages_completed"]
+validation_required = ["test_or_check_after_implementation", "review_before_final"]
+model_selection_hints = ["Use coding-strong models for implementer and reasoning-strong models for architecture or review bottlenecks."]
+script = "scripts/strategies/sop-assembly-line.ts"
+
+[[strategies]]
+id = "debate-critic-panel"
+name = "Debate critic panel"
+priority = 50
+use_when = ["The solution space is uncertain, contested, or high impact.", "Independent critique can expose hidden assumptions before action."]
+avoid_when = ["The task is straightforward and evidence is already decisive.", "No lead decision will be made from the debate."]
+required_signals = ["high_uncertainty", "high_failure_cost"]
+contraindications = ["straightforward_task", "no_lead_arbitration"]
+candidate_agents = ["architect", "critic", "reviewer"]
+max_agents = 3
+parallelism = "parallel_then_integrate"
+required_evidence = ["competing_options", "decision_criteria", "critic_findings"]
+stop_conditions = ["lead_decision_ready", "debate_repeats_without_new_evidence"]
+validation_required = ["lead_records_accepted_and_rejected_findings"]
+model_selection_hints = ["Use stronger reasoning for critic and architect when the decision is durable or high risk."]
+script = "scripts/strategies/debate-critic-panel.ts"
+
+[[strategies]]
+id = "reviewer-tester-loop"
+name = "Reviewer and tester loop"
+priority = 65
+use_when = ["Code, configuration, policy, or documentation behavior changed.", "Regression risk or validation commands exist."]
+avoid_when = ["No artifact changed and no behavior claim needs validation."]
+required_signals = ["code_modified_or_to_modify", "validation_available"]
+contraindications = ["no_artifact_change", "no_validation_path"]
+candidate_agents = ["tester", "reviewer", "critic"]
+max_agents = 3
+parallelism = "sequential_or_parallel_after_change"
+required_evidence = ["diff_scope", "validation_commands", "review_scope"]
+stop_conditions = ["validation_passed_or_deferred", "blocking_review_finding", "retry_budget_exhausted"]
+validation_required = ["run_narrowest_relevant_check", "report_not_run_reason_when_needed"]
+model_selection_hints = ["Use tester on lower to medium reasoning unless failure diagnosis is complex; use reviewer with enough reasoning for risk analysis."]
+script = "scripts/strategies/reviewer-tester-loop.ts"
+
+[[strategies]]
+id = "batch-map-reduce"
+name = "Batch map-reduce"
+priority = 58
+use_when = ["Many independent files, modules, sources, or candidates need similar analysis.", "Work can be divided without shared write scope."]
+avoid_when = ["Items are tightly coupled and require one coherent local pass."]
+required_signals = ["many_independent_items", "parallelizable_scope"]
+contraindications = ["tightly_coupled_scope", "shared_write_conflict"]
+candidate_agents = ["codebase-explorer", "reviewer", "researcher", "tester"]
+max_agents = 4
+parallelism = "parallel_map_then_reduce"
+required_evidence = ["item_partition", "per_item_output_schema", "reduce_rule"]
+stop_conditions = ["all_partitions_returned", "partition_conflict_unresolved", "coverage_incomplete"]
+validation_required = ["lead_reduces_outputs", "coverage_record"]
+model_selection_hints = ["Use lower-cost models for homogeneous map passes and stronger reasoning for final reduction when conflicts matter."]
+script = "scripts/strategies/batch-map-reduce.ts"
+
+[[strategies]]
+id = "selector-group-chat"
+name = "Selector group chat"
+priority = 35
+use_when = ["The next useful specialist cannot be chosen upfront.", "Exploration is nonlinear and needs bounded dynamic role selection."]
+avoid_when = ["A fixed route or simple specialist handoff is sufficient.", "The task has no strict turn or budget cap."]
+required_signals = ["dynamic_next_speaker_needed", "nonlinear_exploration"]
+contraindications = ["fixed_route_sufficient", "no_turn_budget"]
+candidate_agents = ["codebase-explorer", "researcher", "architect", "critic", "reviewer", "tester"]
+max_agents = 4
+parallelism = "bounded_dynamic"
+required_evidence = ["turn_budget", "speaker_selection_rule", "lead_checkpoint_rule"]
+stop_conditions = ["turn_budget_reached", "lead_checkpoint_requires_decision", "no_new_evidence"]
+validation_required = ["lead_checkpoint_after_each_round", "final_integration_record"]
+model_selection_hints = ["Use stronger lead reasoning; specialists can vary by selected role and immediate objective."]
+script = "scripts/strategies/selector-group-chat.ts"
+
+[[strategies]]
+id = "human-approval-gate"
+name = "Human approval gate"
+priority = 100
+use_when = ["The task involves destructive operations, secrets, authentication, payment, database, deployment, cloud deletion, git history, or sensitive policy changes.", "Exact approval record is required before action."]
+avoid_when = ["The task is clearly read-only and does not expose sensitive values."]
+required_signals = ["high_risk_operation"]
+contraindications = ["read_only_low_risk"]
+candidate_agents = ["critic", "reviewer", "tester"]
+max_agents = 2
+parallelism = "gate_then_optional_review"
+required_evidence = ["exact_operation", "exact_target_path_or_resource", "risk_statement", "safer_alternative"]
+stop_conditions = ["approval_granted", "approval_denied", "safer_read_only_path_available"]
+validation_required = ["approval_record_before_action", "lead_confirms_scope"]
+model_selection_hints = ["Use high-reasoning review for security-sensitive approval analysis; prioritize capability over cost."]
+script = "scripts/strategies/human-approval-gate.ts"
