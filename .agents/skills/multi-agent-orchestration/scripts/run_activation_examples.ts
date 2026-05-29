@@ -2,10 +2,11 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { parse as parseYaml } from "yaml";
-import { selectStrategy, skillDir } from "./lib/strategy_common.js";
+import { buildPacket, selectStrategy, skillDir } from "./lib/strategy_common.js";
 
 type Example = {
   strategy_id: string;
+  strategy_under_test?: string;
   context: Record<string, unknown>;
   expected_activation?: Record<string, unknown>;
 };
@@ -15,7 +16,7 @@ const examplesPath = resolve(skillDir(), "examples", "strategy-activation-exampl
 const parsed = parseYaml(readFileSync(examplesPath, "utf8")) as { examples: Example[] };
 const failures: string[] = [];
 const results = parsed.examples.map((example) => {
-  const packet = selectStrategy(example.context);
+  const packet = example.strategy_under_test ? buildPacket(example.strategy_under_test, example.context) : selectStrategy(example.context);
   if (packet.strategy_id !== example.strategy_id) {
     failures.push(`${example.strategy_id}: expected strategy_id ${example.strategy_id}, got ${packet.strategy_id}`);
   }

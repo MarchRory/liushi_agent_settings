@@ -4,11 +4,13 @@
 
 1. Determine whether lead-only is sufficient.
 2. Collect task signals in a small JSON context.
-3. Run `npm run select -- --context-file context.json` or the specific strategy script.
-4. Review the activation packet before delegation.
-5. Fill the runtime model decision record.
-6. Start specialists manually with scoped handoffs.
-7. Integrate outputs, resolve conflicts, validate, and report.
+3. Add the lead's task decomposition in `lead_analysis` and `lead_strategy_reason`.
+4. Add explicit evidence fields when they are naturally available; do not force rigid fields when a concise lead analysis captures the same decision.
+5. Run `npm run select -- --context-file context.json` or the specific strategy script.
+6. Review the activation packet before delegation.
+7. Fill the runtime model decision record.
+8. Start specialists manually with scoped handoffs.
+9. Integrate outputs, resolve conflicts, validate, and report.
 
 ## Trust Boundary
 

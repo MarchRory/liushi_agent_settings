@@ -75,6 +75,7 @@ skills:
     model_policy: ".agents/skills/multi-agent-orchestration/references/model-policy.toml"
     platform_compatibility: ".agents/skills/multi-agent-orchestration/references/platform-compatibility.md"
     research_basis: ".agents/skills/multi-agent-orchestration/references/research-basis.md"
+    strategy_playbooks: ".agents/skills/multi-agent-orchestration/references/strategy-playbooks.md"
     package_manifest: ".agents/skills/multi-agent-orchestration/package.json"
     package_lock: ".agents/skills/multi-agent-orchestration/package-lock.json"
     selector_script: ".agents/skills/multi-agent-orchestration/scripts/select_strategy.ts"

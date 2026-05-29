@@ -57,6 +57,12 @@ activation_packet:
     fallback_model: ""
   model_selection_hints:
     - "Use tester on lower to medium reasoning unless failure diagnosis is complex; use reviewer with enough reasoning for risk analysis."
+  safety_gate:
+    approval_required: false
+    approval_record_valid: false
+    approval_record_missing_fields: []
+    approval_record_mismatch: []
+    action_may_proceed: false
   script_contract:
     read_only: true
     network: false

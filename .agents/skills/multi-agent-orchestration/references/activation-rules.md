@@ -27,6 +27,8 @@ Strategy scripts compute a deterministic advisory score from task signals:
 {
   "task_summary": "",
   "signals": [],
+  "lead_analysis": "",
+  "lead_strategy_reason": "",
   "risks": [],
   "files_or_sources": [],
   "requires_edit": false,
@@ -38,6 +40,36 @@ Strategy scripts compute a deterministic advisory score from task signals:
   "target": "",
   "risk_statement": "",
   "safer_alternative": "",
+  "source_list": [],
+  "source_priority": "",
+  "date_or_version_context": "",
+  "uncertainty_notes": "",
+  "routing_reason": "",
+  "agent_scope_boundaries": [],
+  "handoff_constraints": [],
+  "stage_plan": [],
+  "stage_exit_gates": [],
+  "validation_path": "",
+  "competing_options": [],
+  "decision_criteria": [],
+  "critique_questions": [],
+  "diff_scope": "",
+  "validation_commands": [],
+  "review_scope": "",
+  "item_partition": [],
+  "per_item_output_schema": {},
+  "reduce_rule": "",
+  "turn_budget": 0,
+  "speaker_selection_rule": "",
+  "lead_checkpoint_rule": "",
+  "approval_record": {
+    "approved": false,
+    "approver_source": "",
+    "exact_operation": "",
+    "exact_target": "",
+    "timestamp": "",
+    "risk_acknowledged": false
+  },
   "model_decision": {
     "chosen_model": "",
     "reasoning_effort": "",
@@ -49,3 +81,12 @@ Strategy scripts compute a deterministic advisory score from task signals:
 ```
 
 All fields are optional for scripts, but sparse context lowers confidence.
+
+## Evidence Rules
+
+- Lead analysis is first-class evidence. The selector accepts structured fields when available and can also accept concise `lead_analysis` / `lead_strategy_reason` when the lead has already decomposed the task clearly.
+- Signals can select candidate strategies, but signals alone must not satisfy detailed evidence fields.
+- `batch-map-reduce` requires explicit `item_partition`, `per_item_output_schema`, and `reduce_rule`.
+- `selector-group-chat` requires explicit `turn_budget`, `speaker_selection_rule`, and `lead_checkpoint_rule`.
+- `human-approval-gate` requires exact operation/target/risk/safer alternative before the gate packet is complete. Risky action still requires a valid `approval_record` and `safety_gate.action_may_proceed=true`.
+- Use `references/strategy-playbooks.md` for per-strategy context requirements.

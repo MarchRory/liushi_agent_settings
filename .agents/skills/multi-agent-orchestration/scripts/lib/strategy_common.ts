@@ -19,33 +19,34 @@ export const REQUIRED_STRATEGY_FIELDS = [
   "script",
 ] as const;
 
-const HIGH_RISK_TERMS = [
-  "secret",
-  "credential",
-  "token",
-  "password",
-  "auth",
-  "payment",
-  "database",
-  "db",
-  "migration",
-  "deploy",
-  "production",
-  "prod",
-  "delete",
-  "remove",
-  "destroy",
-  "destructive",
-  "drop",
-  "truncate",
-  "rollback",
-  "git reset",
-  "git clean",
-  "git restore",
-  "git checkout",
-  "cloud",
-  "terraform destroy",
-  "kubectl delete",
+const HIGH_RISK_PATTERNS = [
+  /\bsecrets?\b/,
+  /\bcredentials?\b/,
+  /\btokens?\b/,
+  /\bpasswords?\b/,
+  /\bauth(?:entication|orization)?\b/,
+  /\bpayments?\b/,
+  /\bdatabases?\b/,
+  /\bdb\b/,
+  /\bmigrations?\b/,
+  /\bdeploy(?:ment|ing|ed|s)?\b/,
+  /\bproduction\b/,
+  /\bprod\b/,
+  /\bdelete\b/,
+  /\bremove\b/,
+  /\bdestroy\b/,
+  /\bdestructive\b/,
+  /\bdrop\b/,
+  /\btruncate\b/,
+  /\brollback\b/,
+  /\bgit\s+reset\b/,
+  /\bgit\s+clean\b/,
+  /\bgit\s+restore\b/,
+  /\bgit\s+checkout\b/,
+  /\bdocker\s+.*\bprune\b/,
+  /\bterraform\s+destroy\b/,
+  /\bkubectl\s+delete\b/,
+  /\bcloud\b/,
 ];
 
 const VALID_ROLES = new Set([
@@ -67,9 +68,20 @@ export type ModelDecision = {
   fallback_model?: string;
 };
 
+export type ApprovalRecord = {
+  approved?: boolean;
+  approver_source?: string;
+  exact_operation?: string;
+  exact_target?: string;
+  timestamp?: string;
+  risk_acknowledged?: boolean;
+};
+
 export type TaskContext = {
   task_summary?: string;
   signals?: string[];
+  lead_analysis?: string;
+  lead_strategy_reason?: string;
   risks?: string[];
   files_or_sources?: string[];
   requires_edit?: boolean;
@@ -81,6 +93,29 @@ export type TaskContext = {
   target?: string;
   risk_statement?: string;
   safer_alternative?: string;
+  source_list?: string[];
+  source_priority?: string;
+  date_or_version_context?: string;
+  uncertainty_notes?: string;
+  routing_reason?: string;
+  agent_scope_boundaries?: string[];
+  handoff_constraints?: string[];
+  stage_plan?: string[];
+  stage_exit_gates?: string[];
+  validation_path?: string;
+  competing_options?: string[];
+  decision_criteria?: string[];
+  critique_questions?: string[];
+  diff_scope?: string;
+  validation_commands?: string[];
+  review_scope?: string;
+  item_partition?: string[];
+  per_item_output_schema?: Record<string, unknown> | string;
+  reduce_rule?: string;
+  turn_budget?: number;
+  speaker_selection_rule?: string;
+  lead_checkpoint_rule?: string;
+  approval_record?: ApprovalRecord;
   model_decision?: ModelDecision;
 };
 
@@ -135,6 +170,13 @@ export type ActivationPacket = {
   handoff_skeletons: Array<Record<string, unknown>>;
   model_decision_record: Required<ModelDecision>;
   model_selection_hints: string[];
+  safety_gate: {
+    approval_required: boolean;
+    approval_record_valid: boolean;
+    approval_record_missing_fields: string[];
+    approval_record_mismatch: string[];
+    action_may_proceed: boolean;
+  };
   script_contract: {
     read_only: true;
     network: false;
@@ -171,6 +213,8 @@ export function normalizeContext(raw: TaskContext): Required<TaskContext> {
   const context: Required<TaskContext> = {
     task_summary: raw.task_summary ?? "",
     signals: Array.isArray(raw.signals) ? raw.signals.map(String) : [],
+    lead_analysis: raw.lead_analysis ?? "",
+    lead_strategy_reason: raw.lead_strategy_reason ?? "",
     risks: Array.isArray(raw.risks) ? raw.risks.map(String) : [],
     files_or_sources: Array.isArray(raw.files_or_sources) ? raw.files_or_sources.map(String) : [],
     requires_edit: Boolean(raw.requires_edit),
@@ -182,6 +226,29 @@ export function normalizeContext(raw: TaskContext): Required<TaskContext> {
     target: raw.target ?? "",
     risk_statement: raw.risk_statement ?? "",
     safer_alternative: raw.safer_alternative ?? "",
+    source_list: Array.isArray(raw.source_list) ? raw.source_list.map(String) : [],
+    source_priority: raw.source_priority ?? "",
+    date_or_version_context: raw.date_or_version_context ?? "",
+    uncertainty_notes: raw.uncertainty_notes ?? "",
+    routing_reason: raw.routing_reason ?? "",
+    agent_scope_boundaries: Array.isArray(raw.agent_scope_boundaries) ? raw.agent_scope_boundaries.map(String) : [],
+    handoff_constraints: Array.isArray(raw.handoff_constraints) ? raw.handoff_constraints.map(String) : [],
+    stage_plan: Array.isArray(raw.stage_plan) ? raw.stage_plan.map(String) : [],
+    stage_exit_gates: Array.isArray(raw.stage_exit_gates) ? raw.stage_exit_gates.map(String) : [],
+    validation_path: raw.validation_path ?? "",
+    competing_options: Array.isArray(raw.competing_options) ? raw.competing_options.map(String) : [],
+    decision_criteria: Array.isArray(raw.decision_criteria) ? raw.decision_criteria.map(String) : [],
+    critique_questions: Array.isArray(raw.critique_questions) ? raw.critique_questions.map(String) : [],
+    diff_scope: raw.diff_scope ?? "",
+    validation_commands: Array.isArray(raw.validation_commands) ? raw.validation_commands.map(String) : [],
+    review_scope: raw.review_scope ?? "",
+    item_partition: Array.isArray(raw.item_partition) ? raw.item_partition.map(String) : [],
+    per_item_output_schema: raw.per_item_output_schema ?? {},
+    reduce_rule: raw.reduce_rule ?? "",
+    turn_budget: Number.isFinite(raw.turn_budget) ? Number(raw.turn_budget) : 0,
+    speaker_selection_rule: raw.speaker_selection_rule ?? "",
+    lead_checkpoint_rule: raw.lead_checkpoint_rule ?? "",
+    approval_record: raw.approval_record ?? {},
     model_decision: raw.model_decision ?? {},
   };
 
@@ -206,7 +273,7 @@ export function normalizeContext(raw: TaskContext): Required<TaskContext> {
     .join(" ")
     .toLowerCase();
 
-  if (context.sensitive_domains.length > 0 || HIGH_RISK_TERMS.some((term) => riskSurface.includes(term))) {
+  if (context.sensitive_domains.length > 0 || HIGH_RISK_PATTERNS.some((pattern) => pattern.test(riskSurface))) {
     signals.add("high_risk_operation");
   }
 
@@ -267,6 +334,7 @@ export function buildPacket(strategyId: string, rawContext: TaskContext): Activa
   const eligible = missing.length === 0 && contraindicationHits.length === 0 && missingEvidence.length === 0;
   const score = contraindicationHits.length > 0 ? 0 : Math.min(1, Number((0.2 + 0.5 * (matched.length / Math.max(required.size, 1)) + 0.3 * ((strategy.required_evidence.length - missingEvidence.length) / Math.max(strategy.required_evidence.length, 1))).toFixed(3)));
   const confidence: ActivationPacket["confidence"] = contraindicationHits.length > 0 ? "high" : eligible && score >= 0.9 ? "high" : matched.length > 0 ? "medium" : "low";
+  const safetyGate = buildSafetyGate(strategy.id, context, eligible);
 
   return {
     schema_version: "1.0",
@@ -279,7 +347,7 @@ export function buildPacket(strategyId: string, rawContext: TaskContext): Activa
     missing_required_signals: missing,
     contraindication_hits: contraindicationHits,
     lead_decision_required: true,
-    recommended_action: eligible ? "lead_review_activation_packet" : "lead_decision_required_no_auto_selection",
+    recommended_action: recommendedAction(strategy.id, eligible, safetyGate),
     task_summary: context.task_summary,
     candidate_agents: strategy.candidate_agents,
     max_agents: strategy.max_agents,
@@ -291,6 +359,7 @@ export function buildPacket(strategyId: string, rawContext: TaskContext): Activa
     handoff_skeletons: buildHandoffs(strategy, context),
     model_decision_record: normalizeModelDecision(context.model_decision),
     model_selection_hints: strategy.model_selection_hints,
+    safety_gate: safetyGate,
     script_contract: {
       read_only: true,
       network: false,
@@ -304,34 +373,95 @@ function evidencePresent(key: string, context: Required<TaskContext>): boolean {
   const evidenceMap: Record<string, boolean> = {
     reason_lead_only_is_sufficient: context.signals.includes("small_task") || context.task_summary.length > 0,
     risk_is_low: !context.signals.includes("high_risk_operation") && context.risks.length === 0,
-    source_list: context.files_or_sources.length > 0 || context.requires_research,
-    source_priority: context.requires_research,
-    date_or_version_context: context.signals.includes("recent_external_knowledge_required") || context.requires_research,
-    uncertainty_notes: context.signals.includes("high_uncertainty") || context.requires_research,
-    routing_reason: context.signals.includes("routing_needed"),
-    agent_scope_boundaries: context.signals.includes("multiple_domains"),
-    handoff_constraints: context.task_summary.length > 0,
-    stage_plan: context.signals.includes("multi_stage_delivery"),
-    stage_exit_gates: context.validation_available,
-    validation_path: context.validation_available,
-    competing_options: context.signals.includes("high_uncertainty"),
-    decision_criteria: context.task_summary.length > 0,
-    critic_findings: context.signals.includes("high_failure_cost"),
-    diff_scope: context.requires_edit || context.files_or_sources.length > 0,
-    validation_commands: context.validation_available,
-    review_scope: context.requires_edit || context.files_or_sources.length > 0,
-    item_partition: context.signals.includes("many_independent_items"),
-    per_item_output_schema: context.signals.includes("many_independent_items"),
-    reduce_rule: context.parallelizable,
-    turn_budget: context.signals.includes("dynamic_next_speaker_needed"),
-    speaker_selection_rule: context.signals.includes("dynamic_next_speaker_needed"),
-    lead_checkpoint_rule: context.signals.includes("nonlinear_exploration"),
+    source_list: context.source_list.length > 0 || context.files_or_sources.length > 0 || mentionsAny(context.lead_analysis, ["source", "sources", "docs", "papers", "research threads"]),
+    source_priority: context.source_priority.length > 0 || mentionsAny(context.lead_analysis, ["prefer", "priority", "primary sources", "official docs"]),
+    date_or_version_context: context.date_or_version_context.length > 0 || mentionsAny(context.lead_analysis, ["date", "version", "current", "recent"]),
+    uncertainty_notes: context.uncertainty_notes.length > 0 || mentionsAny(context.lead_analysis, ["uncertain", "uncertainty", "conflict", "unknown"]),
+    routing_reason: context.routing_reason.length > 0 || context.lead_strategy_reason.length > 0,
+    agent_scope_boundaries: context.agent_scope_boundaries.length > 0 || mentionsAny(context.lead_analysis, ["scope", "boundary", "permissions", "domains"]),
+    handoff_constraints: context.handoff_constraints.length > 0 || mentionsAny(context.lead_analysis, ["constraint", "constraints", "must not", "read-only"]),
+    stage_plan: context.stage_plan.length > 0 || mentionsAny(context.lead_analysis, ["stage", "stages", "sequence", "pipeline"]),
+    stage_exit_gates: context.stage_exit_gates.length > 0 || mentionsAny(context.lead_analysis, ["gate", "exit", "checkpoint", "acceptance"]),
+    validation_path: context.validation_path.length > 0 || context.validation_commands.length > 0 || mentionsAny(context.lead_analysis, ["validate", "test", "check"]),
+    competing_options: context.competing_options.length >= 2 || mentionsAny(context.lead_analysis, ["option", "options", "alternative", "alternatives"]),
+    decision_criteria: context.decision_criteria.length > 0 || mentionsAny(context.lead_analysis, ["criteria", "tradeoff", "risk", "cost"]),
+    critique_questions: context.critique_questions.length > 0 || mentionsAny(context.lead_analysis, ["critic", "critique", "challenge", "assumption"]),
+    diff_scope: context.diff_scope.length > 0 || context.files_or_sources.length > 0,
+    validation_commands: context.validation_commands.length > 0,
+    review_scope: context.review_scope.length > 0 || context.files_or_sources.length > 0,
+    item_partition: context.item_partition.length > 0,
+    per_item_output_schema: typeof context.per_item_output_schema === "string" ? context.per_item_output_schema.length > 0 : Object.keys(context.per_item_output_schema).length > 0,
+    reduce_rule: context.reduce_rule.length > 0,
+    turn_budget: context.turn_budget > 0,
+    speaker_selection_rule: context.speaker_selection_rule.length > 0,
+    lead_checkpoint_rule: context.lead_checkpoint_rule.length > 0,
     exact_operation: context.operation.length > 0,
     exact_target_path_or_resource: context.target.length > 0 || context.files_or_sources.length > 0,
     risk_statement: context.risk_statement.length > 0 || context.risks.length > 0,
     safer_alternative: context.safer_alternative.length > 0,
   };
   return Boolean(evidenceMap[key]);
+}
+
+function mentionsAny(text: string, needles: string[]): boolean {
+  const normalized = text.toLowerCase();
+  return needles.some((needle) => normalized.includes(needle.toLowerCase()));
+}
+
+function recommendedAction(strategyId: string, eligible: boolean, safetyGate: ActivationPacket["safety_gate"]): string {
+  if (!eligible) return "lead_decision_required_no_auto_selection";
+  if (strategyId === "human-approval-gate" && !safetyGate.approval_record_valid) {
+    return "lead_request_human_approval_before_action";
+  }
+  if (strategyId === "human-approval-gate") return "lead_review_approval_record_before_action";
+  return "lead_review_activation_packet";
+}
+
+function buildSafetyGate(strategyId: string, context: Required<TaskContext>, eligible: boolean): ActivationPacket["safety_gate"] {
+  if (strategyId !== "human-approval-gate") {
+    return {
+      approval_required: false,
+      approval_record_valid: false,
+      approval_record_missing_fields: [],
+      approval_record_mismatch: [],
+      action_may_proceed: false,
+    };
+  }
+
+  const record = context.approval_record;
+  const missing = [
+    ["approved", typeof record.approved === "boolean"],
+    ["approver_source", typeof record.approver_source === "string" && record.approver_source.length > 0],
+    ["exact_operation", typeof record.exact_operation === "string" && record.exact_operation.length > 0],
+    ["exact_target", typeof record.exact_target === "string" && record.exact_target.length > 0],
+    ["timestamp", typeof record.timestamp === "string" && record.timestamp.length > 0],
+    ["risk_acknowledged", typeof record.risk_acknowledged === "boolean"],
+  ]
+    .filter(([, present]) => !present)
+    .map(([field]) => String(field));
+
+  const mismatch: string[] = [];
+  if (record.approved !== true) mismatch.push("approved_not_true");
+  if (record.risk_acknowledged !== true) mismatch.push("risk_not_acknowledged");
+  if (typeof record.exact_operation === "string" && context.operation.length > 0 && normalizeComparable(record.exact_operation) !== normalizeComparable(context.operation)) {
+    mismatch.push("operation_mismatch");
+  }
+  if (typeof record.exact_target === "string" && context.target.length > 0 && normalizeComparable(record.exact_target) !== normalizeComparable(context.target)) {
+    mismatch.push("target_mismatch");
+  }
+
+  const valid = missing.length === 0 && mismatch.length === 0;
+  return {
+    approval_required: true,
+    approval_record_valid: valid,
+    approval_record_missing_fields: missing,
+    approval_record_mismatch: mismatch,
+    action_may_proceed: eligible && valid,
+  };
+}
+
+function normalizeComparable(value: string): string {
+  return value.trim().toLowerCase().replace(/\s+/g, " ");
 }
 
 function buildHandoffs(strategy: Strategy, context: Required<TaskContext>): Array<Record<string, unknown>> {
@@ -399,6 +529,13 @@ function noEligiblePacket(context: Required<TaskContext>, packets: ActivationPac
     handoff_skeletons: [],
     model_decision_record: normalizeModelDecision(context.model_decision),
     model_selection_hints: ["Do not start specialists until a strategy is eligible or the lead records an override."],
+    safety_gate: {
+      approval_required: false,
+      approval_record_valid: false,
+      approval_record_missing_fields: [],
+      approval_record_mismatch: [],
+      action_may_proceed: false,
+    },
     script_contract: {
       read_only: true,
       network: false,

@@ -43,6 +43,13 @@
     "fallback_model": ""
   },
   "model_selection_hints": [],
+  "safety_gate": {
+    "approval_required": false,
+    "approval_record_valid": false,
+    "approval_record_missing_fields": [],
+    "approval_record_mismatch": [],
+    "action_may_proceed": false
+  },
   "script_contract": {
     "read_only": true,
     "network": false,
@@ -52,4 +59,4 @@
 }
 ```
 
-The selector returns `no-eligible-strategy` instead of silently falling back when required signals or evidence are missing. The lead must review and may override the packet. Overrides require a reason in the final integration record.
+The selector returns `no-eligible-strategy` instead of silently falling back when required signals or evidence are missing. `eligible=true` means the strategy packet has enough evidence for lead review; it does not authorize risky action. For `human-approval-gate`, action may proceed only when `safety_gate.action_may_proceed=true` after lead review. Overrides require a reason in the final integration record.
