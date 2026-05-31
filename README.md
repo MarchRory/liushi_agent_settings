@@ -14,6 +14,7 @@ AGENTS.md                 # Short Codex lead-agent contract
 .codex/agents/<name>/*    # Sidecar docs/examples for each preset agent
 .agents/skills/*          # Portable skill modules with references/examples
 .harness/policies/*       # Safety, validation, and memory gates
+.harness/policies/context-governance.yaml # Context, memory, and self-evolution gates
 .harness/manifest.yaml    # Machine-readable harness package manifest
 .harness/memory/*         # Durable project memory templates
 .harness/evals/*          # Reproducible harness eval definitions
@@ -117,3 +118,4 @@ codex debug prompt-input
 - Keep canonical workflows in `docs/harness/*`, `.agents/skills/*`, and `.harness/policies/*`.
 - Treat subagent output as evidence for lead review, not as authority.
 - Evaluate harness quality empirically before expanding process.
+- Govern harness self-evolution with source-backed hypotheses, measurable metrics, bounded scope, and rollback triggers.

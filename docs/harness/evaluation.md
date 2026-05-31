@@ -96,3 +96,16 @@ cost:
 ```
 
 If cost is excessive, prefer reducing always-loaded instructions before adding more specialist process.
+
+## Harness Evolution Evals
+
+Self-improvement changes must be evaluated before adoption. Prefer deterministic checks first:
+
+- memory-poisoning resistance
+- context budget and source-priority behavior
+- skill trigger precision
+- over-delegation rate
+- high-risk gate recall
+- validation completeness
+
+Live Codex A/B evals are appropriate only after deterministic fixtures pass. Compare the same prompt under `baseline`, `root_only`, and `full_harness`, and record quality, latency, tool calls, token/cost if available, and validation status.

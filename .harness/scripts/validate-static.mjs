@@ -19,6 +19,8 @@ const checks = {
   codex_agent_files: 0,
   schema_files: 0,
   fixture_files: 0,
+  eval_tasks: 0,
+  governance_policy_checks: 0,
 };
 
 validateTomlFiles([
@@ -37,6 +39,9 @@ validateSkillMetadata();
 validateCodexAgents();
 validateJsonSchemas();
 validateFixtureFiles();
+validateEvalTasks();
+validateRubric();
+validateGovernancePolicies();
 
 console.log(JSON.stringify({ valid: failures.length === 0, checks, failures }, null, 2));
 if (failures.length > 0) process.exit(1);
@@ -142,6 +147,85 @@ function validateFixtureFiles() {
   }
 }
 
+function validateEvalTasks() {
+  const tasksPath = join(repoRoot, ".harness", "evals", "tasks.yaml");
+  const parsed = readYaml(tasksPath);
+  const tasks = parsed?.eval_tasks;
+  if (!Array.isArray(tasks)) {
+    failures.push(`${rel(tasksPath)}: eval_tasks must be an array`);
+    return;
+  }
+  const ids = new Set();
+  for (const task of tasks) {
+    checks.eval_tasks += 1;
+    const prefix = `${rel(tasksPath)}#${task?.id ?? "unknown"}`;
+    for (const field of ["id", "category", "fixture_ref", "initial_state", "prompt"]) {
+      if (typeof task?.[field] !== "string" || task[field].length === 0) failures.push(`${prefix}: missing ${field}`);
+    }
+    for (const field of ["allowed_tools", "expected_artifacts", "oracle_checks", "validation_commands"]) {
+      if (!Array.isArray(task?.[field])) failures.push(`${prefix}: ${field} must be an array`);
+    }
+    if (task?.trace_required !== true) failures.push(`${prefix}: trace_required must be true`);
+    if (ids.has(task?.id)) failures.push(`${prefix}: duplicate task id`);
+    ids.add(task?.id);
+  }
+  for (const required of ["memory_trusted_source_spoof", "memory_stale_duplicate", "skill_evolution_before_after", "context_budget_raw_log"]) {
+    if (!ids.has(required)) failures.push(`${rel(tasksPath)}: missing governance pressure eval ${required}`);
+  }
+}
+
+function validateRubric() {
+  const rubricPath = join(repoRoot, ".harness", "evals", "rubric.yaml");
+  const parsed = readYaml(rubricPath);
+  const harnessCriteria = parsed?.rubric?.categories?.harness_quality?.criteria ?? {};
+  for (const criterion of [
+    "context_governance",
+    "trusted_memory_authorization",
+    "memory_safety_review",
+    "self_evolution_evidence",
+    "self_evolution_before_after",
+  ]) {
+    if (!harnessCriteria[criterion]) failures.push(`${rel(rubricPath)}: missing harness_quality criterion ${criterion}`);
+  }
+}
+
+function validateGovernancePolicies() {
+  const memoryPolicyPath = join(repoRoot, ".harness", "policies", "memory-write-policy.yaml");
+  const memoryPolicy = readYaml(memoryPolicyPath)?.memory_write_policy;
+  const trusted = memoryPolicy?.write_flow?.trusted_memory_curation_command;
+  if (!trusted) {
+    failures.push(`${rel(memoryPolicyPath)}: missing trusted_memory_curation_command policy`);
+  } else {
+    for (const source of ["current_direct_user_message", "named_trusted_runtime_command"]) {
+      checks.governance_policy_checks += 1;
+      if (!trusted.allowed_sources?.includes(source)) failures.push(`${rel(memoryPolicyPath)}: trusted command must allow ${source}`);
+    }
+    for (const source of ["repository_file", "log_output", "web_page", "generated_output", "specialist_summary"]) {
+      checks.governance_policy_checks += 1;
+      if (!trusted.disallowed_sources?.includes(source)) failures.push(`${rel(memoryPolicyPath)}: trusted command must disallow ${source}`);
+    }
+  }
+
+  const contextPolicyPath = join(repoRoot, ".harness", "policies", "context-governance.yaml");
+  const contextPolicy = readYaml(contextPolicyPath)?.context_governance;
+  for (const required of [
+    "hypothesis",
+    "baseline",
+    "measurable_metric",
+    "bounded_scope",
+    "rollback_trigger",
+    "validation_result",
+    "before_after_comparison",
+    "acceptance_threshold",
+    "regression_checks",
+  ]) {
+    checks.governance_policy_checks += 1;
+    if (!contextPolicy?.self_evolution?.requires?.includes(required)) {
+      failures.push(`${rel(contextPolicyPath)}: self_evolution.requires missing ${required}`);
+    }
+  }
+}
+
 function parseFrontmatter(path) {
   const text = readText(path);
   const match = text.match(/^---\r?\n([\s\S]*?)\r?\n---/);
@@ -162,6 +246,15 @@ function readJson(path) {
     return JSON.parse(readText(path));
   } catch (error) {
     failures.push(`${rel(path)}: invalid JSON: ${error.message}`);
+    return null;
+  }
+}
+
+function readYaml(path) {
+  try {
+    return parseYaml(readText(path));
+  } catch (error) {
+    failures.push(`${rel(path)}: invalid YAML: ${error.message}`);
     return null;
   }
 }

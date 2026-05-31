@@ -154,6 +154,7 @@ Load detailed protocols only when useful:
 - Orchestration: `docs/harness/orchestration.md`
 - Runtime adapters: `docs/harness/runtime-adapters.md`
 - Memory: `docs/harness/memory.md`
+- Context governance: `docs/harness/context-governance.md`
 - Evaluation: `docs/harness/evaluation.md`
 - Policies: `.harness/policies/*.yaml`
 - Portable skills: `.agents/skills/*/SKILL.md`

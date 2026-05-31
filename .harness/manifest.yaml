@@ -59,6 +59,7 @@ skills:
     - "code-review"
     - "context-recovery"
     - "eval-runner"
+    - "harness-evolution"
     - "lifecycle-planning"
     - "memory-update"
     - "multi-agent-orchestration"
@@ -85,12 +86,14 @@ harness_resources:
   manifest: ".harness/manifest.yaml"
   docs:
     - "docs/harness/evaluation.md"
+    - "docs/harness/context-governance.md"
     - "docs/harness/lifecycle.md"
     - "docs/harness/memory.md"
     - "docs/harness/orchestration.md"
     - "docs/harness/runtime-adapters.md"
   policies:
     - ".harness/policies/memory-write-policy.yaml"
+    - ".harness/policies/context-governance.yaml"
     - ".harness/policies/safety.yaml"
     - ".harness/policies/validation.yaml"
   evals:
