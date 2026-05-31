@@ -110,6 +110,8 @@ harness_resources:
   state_dirs:
     - ".harness/reports"
     - ".harness/traces"
+  reports:
+    - ".harness/reports/2026-06-01-codex-optimization-report.md"
 
 install:
   global_codex:

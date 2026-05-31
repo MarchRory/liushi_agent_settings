@@ -167,6 +167,7 @@ examples:
   - strategy_id: "human-approval-gate"
     context:
       task_summary: "delete production database"
+      task_type: "high_risk_operation"
     expected_activation:
       eligible: false
       matched_signals: ["high_risk_operation"]

@@ -255,9 +255,10 @@ export function normalizeContext(raw: TaskContext): Required<TaskContext> {
   const complexity = Number.isFinite(raw.complexity) ? Number(raw.complexity) : 0;
   const risk = Number.isFinite(raw.risk) ? Number(raw.risk) : 0;
   const availableEvidence = Array.isArray(raw.available_evidence) ? raw.available_evidence.map(String) : [];
+  const validationCommands = Array.isArray(raw.validation_commands) ? raw.validation_commands.map(String) : [];
   const requiresResearch = Boolean(raw.requires_research || raw.requires_external_sources || raw.task_type === "external_research");
   const requiresEdit = Boolean(raw.requires_edit || raw.requires_code_changes);
-  const requiresTests = Boolean(raw.requires_tests || availableEvidence.includes("test_commands") || availableEvidence.includes("validation_commands"));
+  const requiresTests = Boolean(raw.requires_tests || validationCommands.length > 0 || availableEvidence.includes("test_commands") || availableEvidence.includes("validation_commands"));
   const context: Required<TaskContext> = {
     task: raw.task ?? "",
     task_summary: taskSummary,
@@ -301,7 +302,7 @@ export function normalizeContext(raw: TaskContext): Required<TaskContext> {
     decision_criteria: Array.isArray(raw.decision_criteria) ? raw.decision_criteria.map(String) : [],
     critique_questions: Array.isArray(raw.critique_questions) ? raw.critique_questions.map(String) : [],
     diff_scope: raw.diff_scope ?? "",
-    validation_commands: Array.isArray(raw.validation_commands) ? raw.validation_commands.map(String) : [],
+    validation_commands: validationCommands,
     review_scope: raw.review_scope ?? "",
     item_partition: Array.isArray(raw.item_partition) ? raw.item_partition.map(String) : [],
     per_item_output_schema: raw.per_item_output_schema ?? {},
@@ -345,8 +346,12 @@ export function normalizeContext(raw: TaskContext): Required<TaskContext> {
   const highRiskPatternHit = HIGH_RISK_PATTERNS.some((pattern) => pattern.test(riskSurface));
   const destructiveActionHit = DESTRUCTIVE_ACTION_PATTERNS.some((pattern) => pattern.test(riskSurface));
   const explicitHighRisk = context.task_type === "high_risk_operation" || context.risk >= 5 || context.forbidden_actions.length > 0;
-  const highRiskActionIntent = context.requires_edit || context.operation.length > 0 || context.target.length > 0 || context.sensitive_domains.length > 0;
-  if (explicitHighRisk || destructiveActionHit || (highRiskPatternHit && highRiskActionIntent)) {
+  const highRiskActionIntent =
+    context.operation.length > 0 ||
+    context.target.length > 0 ||
+    context.sensitive_domains.length > 0 ||
+    (context.requires_edit && (context.risk >= 3 || context.forbidden_actions.length > 0));
+  if (explicitHighRisk || (destructiveActionHit && highRiskActionIntent) || (highRiskPatternHit && highRiskActionIntent)) {
     signals.add("high_risk_operation");
   }
 
@@ -468,7 +473,7 @@ function evidencePresent(key: string, context: Required<TaskContext>): boolean {
     competing_options: context.has_competing_options || context.competing_options.length >= 2 || mentionsAny(context.lead_analysis, ["option", "options", "alternative", "alternatives"]),
     decision_criteria: context.has_decision_criteria || context.decision_criteria.length > 0 || mentionsAny(context.lead_analysis, ["criteria", "tradeoff", "risk", "cost"]),
     critique_questions: context.user_requested_debate || context.critique_questions.length > 0 || mentionsAny(context.lead_analysis, ["critic", "critique", "challenge", "assumption"]),
-    diff_scope: context.diff_scope.length > 0 || context.files_or_sources.length > 0 || context.available_evidence.includes("diff"),
+    diff_scope: context.diff_scope.length > 0 || context.task_type === "pr_review" || context.files_or_sources.length > 0 || context.available_evidence.includes("diff"),
     validation_commands: context.validation_commands.length > 0 || context.available_evidence.includes("test_commands") || context.available_evidence.includes("validation_commands"),
     review_scope: context.review_scope.length > 0 || context.task_type === "pr_review" || context.files_or_sources.length > 0,
     item_partition: context.item_partition.length > 0,
