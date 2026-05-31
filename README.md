@@ -72,6 +72,27 @@ The package manifest is `.harness/manifest.yaml`. It is machine-readable and rec
 
 Do not use a free-form `MANIFEST.txt`; manifests should be parseable by tools and stable enough for CI checks.
 
+## Validation
+
+Run the full deterministic validation spine before publishing harness changes:
+
+```powershell
+npm run validate
+```
+
+The root command installs the orchestration skill dependencies and checks TOML/YAML/JSON syntax, skill frontmatter, Codex agent sidecar layout, TypeScript type safety, strategy registry integrity, activation examples, deterministic fixtures, activation-packet snapshots, and wrapper contracts.
+
+The current Task 1 gate is quantitative:
+
+```txt
+fixture_pass_rate = 1.0
+strategy_selection_accuracy = 1.0
+required_field_pass_rate = 1.0
+snapshot_stability = 1.0
+```
+
+See `docs/validation-spine.md` for fixture and strategy extension rules.
+
 ### Project-Scoped Mode
 
 Use this when attaching the harness to one repository.

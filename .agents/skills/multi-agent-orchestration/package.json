@@ -7,6 +7,8 @@
     "select": "tsx scripts/select_strategy.ts",
     "validate": "tsx scripts/select_strategy.ts --validate",
     "examples": "tsx scripts/run_activation_examples.ts --assert",
+    "fixtures": "tsx scripts/run_fixture_snapshots.ts --assert",
+    "fixtures:update": "tsx scripts/run_fixture_snapshots.ts --update",
     "wrappers": "tsx scripts/check_strategy_wrappers.ts",
     "typecheck": "tsc --noEmit"
   },

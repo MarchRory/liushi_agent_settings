@@ -130,15 +130,14 @@ install:
 
 verification:
   commands:
-    - "npx --yes @taplo/cli check .codex/config.toml .codex/agents/*.toml"
-    - "npx --yes @taplo/cli check .agents/skills/multi-agent-orchestration/references/*.toml"
-    - "npx --yes yaml-lint .harness/manifest.yaml"
-    - "cd .agents/skills/multi-agent-orchestration && npm ci && npm run typecheck && npm run validate && npm run examples && npm run wrappers"
+    - "npm run validate"
+    - "npm run validate:static"
+    - "cd .agents/skills/multi-agent-orchestration && npm run fixtures"
     - "codex debug prompt-input"
   platform_commands:
     windows:
-      - "cd .agents/skills/multi-agent-orchestration; npm ci; npm run typecheck; npm run validate; npm run examples; npm run wrappers"
+      - "npm run validate"
     macos:
-      - "cd .agents/skills/multi-agent-orchestration && npm ci && npm run typecheck && npm run validate && npm run examples && npm run wrappers"
+      - "npm run validate"
     linux:
-      - "cd .agents/skills/multi-agent-orchestration && npm ci && npm run typecheck && npm run validate && npm run examples && npm run wrappers"
+      - "npm run validate"

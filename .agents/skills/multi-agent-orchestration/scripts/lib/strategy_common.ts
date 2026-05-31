@@ -49,6 +49,23 @@ const HIGH_RISK_PATTERNS = [
   /\bcloud\b/,
 ];
 
+const DESTRUCTIVE_ACTION_PATTERNS = [
+  /\bdelete\b/,
+  /\bremove\b/,
+  /\bdestroy\b/,
+  /\bdestructive\b/,
+  /\bdrop\b/,
+  /\btruncate\b/,
+  /\brollback\b/,
+  /\bgit\s+reset\b/,
+  /\bgit\s+clean\b/,
+  /\bgit\s+restore\b/,
+  /\bgit\s+checkout\b/,
+  /\bdocker\s+.*\bprune\b/,
+  /\bterraform\s+destroy\b/,
+  /\bkubectl\s+delete\b/,
+];
+
 const VALID_ROLES = new Set([
   "architect",
   "codebase-explorer",
@@ -78,15 +95,34 @@ export type ApprovalRecord = {
 };
 
 export type TaskContext = {
+  task?: string;
   task_summary?: string;
+  task_type?:
+    | "small_fix"
+    | "pr_review"
+    | "architecture_decision"
+    | "external_research"
+    | "memory_update"
+    | "high_risk_operation";
+  complexity?: number;
+  risk?: number;
   signals?: string[];
   lead_analysis?: string;
   lead_strategy_reason?: string;
   risks?: string[];
   files_or_sources?: string[];
   requires_edit?: boolean;
+  requires_code_changes?: boolean;
   requires_research?: boolean;
+  requires_external_sources?: boolean;
   parallelizable?: boolean;
+  requires_tests?: boolean;
+  has_competing_options?: boolean;
+  has_decision_criteria?: boolean;
+  user_requested_debate?: boolean;
+  user_requested_agents?: string[];
+  available_evidence?: string[];
+  forbidden_actions?: string[];
   sensitive_domains?: string[];
   validation_available?: boolean;
   operation?: string;
@@ -149,17 +185,20 @@ type ModelPolicy = {
 
 export type ActivationPacket = {
   schema_version: "1.0";
+  selected_strategy: string;
   strategy_id: string;
   strategy_name: string;
   eligible: boolean;
   score: number;
   confidence: "low" | "medium" | "high";
+  reason: string;
   matched_signals: string[];
   missing_required_signals: string[];
   contraindication_hits: string[];
   lead_decision_required: true;
   recommended_action: string;
   task_summary: string;
+  agents: string[];
   candidate_agents: string[];
   max_agents: number;
   parallelism: string;
@@ -167,10 +206,12 @@ export type ActivationPacket = {
   missing_evidence: string[];
   stop_conditions: string[];
   validation_required: string[];
+  expected_outputs: string[];
   handoff_skeletons: Array<Record<string, unknown>>;
   model_decision_record: Required<ModelDecision>;
   model_selection_hints: string[];
   safety_gate: {
+    requires_human_approval: boolean;
     approval_required: boolean;
     approval_record_valid: boolean;
     approval_record_missing_fields: string[];
@@ -210,18 +251,38 @@ export function strategiesById(): Map<string, Strategy> {
 }
 
 export function normalizeContext(raw: TaskContext): Required<TaskContext> {
+  const taskSummary = raw.task_summary ?? raw.task ?? "";
+  const complexity = Number.isFinite(raw.complexity) ? Number(raw.complexity) : 0;
+  const risk = Number.isFinite(raw.risk) ? Number(raw.risk) : 0;
+  const availableEvidence = Array.isArray(raw.available_evidence) ? raw.available_evidence.map(String) : [];
+  const requiresResearch = Boolean(raw.requires_research || raw.requires_external_sources || raw.task_type === "external_research");
+  const requiresEdit = Boolean(raw.requires_edit || raw.requires_code_changes);
+  const requiresTests = Boolean(raw.requires_tests || availableEvidence.includes("test_commands") || availableEvidence.includes("validation_commands"));
   const context: Required<TaskContext> = {
-    task_summary: raw.task_summary ?? "",
+    task: raw.task ?? "",
+    task_summary: taskSummary,
+    task_type: raw.task_type ?? "small_fix",
+    complexity,
+    risk,
     signals: Array.isArray(raw.signals) ? raw.signals.map(String) : [],
     lead_analysis: raw.lead_analysis ?? "",
     lead_strategy_reason: raw.lead_strategy_reason ?? "",
     risks: Array.isArray(raw.risks) ? raw.risks.map(String) : [],
     files_or_sources: Array.isArray(raw.files_or_sources) ? raw.files_or_sources.map(String) : [],
-    requires_edit: Boolean(raw.requires_edit),
-    requires_research: Boolean(raw.requires_research),
+    requires_edit: requiresEdit,
+    requires_code_changes: Boolean(raw.requires_code_changes),
+    requires_research: requiresResearch,
+    requires_external_sources: Boolean(raw.requires_external_sources),
     parallelizable: Boolean(raw.parallelizable),
+    requires_tests: requiresTests,
+    has_competing_options: Boolean(raw.has_competing_options),
+    has_decision_criteria: Boolean(raw.has_decision_criteria),
+    user_requested_debate: Boolean(raw.user_requested_debate),
+    user_requested_agents: Array.isArray(raw.user_requested_agents) ? raw.user_requested_agents.map(String) : [],
+    available_evidence: availableEvidence,
+    forbidden_actions: Array.isArray(raw.forbidden_actions) ? raw.forbidden_actions.map(String) : [],
     sensitive_domains: Array.isArray(raw.sensitive_domains) ? raw.sensitive_domains.map(String) : [],
-    validation_available: Boolean(raw.validation_available),
+    validation_available: Boolean(raw.validation_available || requiresTests),
     operation: raw.operation ?? "",
     target: raw.target ?? "",
     risk_statement: raw.risk_statement ?? "",
@@ -261,23 +322,40 @@ export function normalizeContext(raw: TaskContext): Required<TaskContext> {
     signals.add("code_modified_or_to_modify");
   }
   if (context.validation_available) signals.add("validation_available");
-
+  if (context.requires_tests) signals.add("validation_available");
+  if (context.task_type === "pr_review") signals.add("code_modified_or_to_modify");
+  if (context.task_type === "architecture_decision") signals.add("high_uncertainty");
+  if (context.task_type === "architecture_decision" && (context.risk >= 3 || context.complexity >= 4)) signals.add("high_failure_cost");
+  if (context.user_requested_debate) signals.add("high_uncertainty");
+  if (context.user_requested_debate && (context.risk >= 3 || context.complexity >= 4)) signals.add("high_failure_cost");
+  if (context.task_type === "external_research") signals.add("external_research_required");
   const riskSurface = [
     context.task_summary,
+    context.task,
     context.operation,
     context.target,
     ...context.risks,
     ...context.sensitive_domains,
+    ...context.forbidden_actions,
     ...context.files_or_sources,
   ]
     .join(" ")
     .toLowerCase();
 
-  if (context.sensitive_domains.length > 0 || HIGH_RISK_PATTERNS.some((pattern) => pattern.test(riskSurface))) {
+  const highRiskPatternHit = HIGH_RISK_PATTERNS.some((pattern) => pattern.test(riskSurface));
+  const destructiveActionHit = DESTRUCTIVE_ACTION_PATTERNS.some((pattern) => pattern.test(riskSurface));
+  const explicitHighRisk = context.task_type === "high_risk_operation" || context.risk >= 5 || context.forbidden_actions.length > 0;
+  const highRiskActionIntent = context.requires_edit || context.operation.length > 0 || context.target.length > 0 || context.sensitive_domains.length > 0;
+  if (explicitHighRisk || destructiveActionHit || (highRiskPatternHit && highRiskActionIntent)) {
     signals.add("high_risk_operation");
   }
 
-  if (signals.size === 0 && !context.requires_edit && !context.requires_research) {
+  if (
+    (context.task_type === "small_fix" || (context.complexity <= 1 && context.risk <= 1)) &&
+    !context.requires_edit &&
+    !context.requires_research &&
+    !signals.has("high_risk_operation")
+  ) {
     signals.add("small_task");
   }
 
@@ -338,17 +416,20 @@ export function buildPacket(strategyId: string, rawContext: TaskContext): Activa
 
   return {
     schema_version: "1.0",
+    selected_strategy: strategy.id,
     strategy_id: strategy.id,
     strategy_name: strategy.name ?? strategy.id,
     eligible,
     score,
     confidence,
+    reason: packetReason(strategy, context, matched, missing, contraindicationHits, missingEvidence),
     matched_signals: matched,
     missing_required_signals: missing,
     contraindication_hits: contraindicationHits,
     lead_decision_required: true,
     recommended_action: recommendedAction(strategy.id, eligible, safetyGate),
     task_summary: context.task_summary,
+    agents: strategy.candidate_agents.slice(0, strategy.max_agents),
     candidate_agents: strategy.candidate_agents,
     max_agents: strategy.max_agents,
     parallelism: strategy.parallelism,
@@ -356,6 +437,7 @@ export function buildPacket(strategyId: string, rawContext: TaskContext): Activa
     missing_evidence: missingEvidence,
     stop_conditions: strategy.stop_conditions,
     validation_required: strategy.validation_required,
+    expected_outputs: expectedOutputs(strategy.id),
     handoff_skeletons: buildHandoffs(strategy, context),
     model_decision_record: normalizeModelDecision(context.model_decision),
     model_selection_hints: strategy.model_selection_hints,
@@ -383,12 +465,12 @@ function evidencePresent(key: string, context: Required<TaskContext>): boolean {
     stage_plan: context.stage_plan.length > 0 || mentionsAny(context.lead_analysis, ["stage", "stages", "sequence", "pipeline"]),
     stage_exit_gates: context.stage_exit_gates.length > 0 || mentionsAny(context.lead_analysis, ["gate", "exit", "checkpoint", "acceptance"]),
     validation_path: context.validation_path.length > 0 || context.validation_commands.length > 0 || mentionsAny(context.lead_analysis, ["validate", "test", "check"]),
-    competing_options: context.competing_options.length >= 2 || mentionsAny(context.lead_analysis, ["option", "options", "alternative", "alternatives"]),
-    decision_criteria: context.decision_criteria.length > 0 || mentionsAny(context.lead_analysis, ["criteria", "tradeoff", "risk", "cost"]),
-    critique_questions: context.critique_questions.length > 0 || mentionsAny(context.lead_analysis, ["critic", "critique", "challenge", "assumption"]),
-    diff_scope: context.diff_scope.length > 0 || context.files_or_sources.length > 0,
-    validation_commands: context.validation_commands.length > 0,
-    review_scope: context.review_scope.length > 0 || context.files_or_sources.length > 0,
+    competing_options: context.has_competing_options || context.competing_options.length >= 2 || mentionsAny(context.lead_analysis, ["option", "options", "alternative", "alternatives"]),
+    decision_criteria: context.has_decision_criteria || context.decision_criteria.length > 0 || mentionsAny(context.lead_analysis, ["criteria", "tradeoff", "risk", "cost"]),
+    critique_questions: context.user_requested_debate || context.critique_questions.length > 0 || mentionsAny(context.lead_analysis, ["critic", "critique", "challenge", "assumption"]),
+    diff_scope: context.diff_scope.length > 0 || context.files_or_sources.length > 0 || context.available_evidence.includes("diff"),
+    validation_commands: context.validation_commands.length > 0 || context.available_evidence.includes("test_commands") || context.available_evidence.includes("validation_commands"),
+    review_scope: context.review_scope.length > 0 || context.task_type === "pr_review" || context.files_or_sources.length > 0,
     item_partition: context.item_partition.length > 0,
     per_item_output_schema: typeof context.per_item_output_schema === "string" ? context.per_item_output_schema.length > 0 : Object.keys(context.per_item_output_schema).length > 0,
     reduce_rule: context.reduce_rule.length > 0,
@@ -401,6 +483,44 @@ function evidencePresent(key: string, context: Required<TaskContext>): boolean {
     safer_alternative: context.safer_alternative.length > 0,
   };
   return Boolean(evidenceMap[key]);
+}
+
+function packetReason(
+  strategy: Strategy,
+  context: Required<TaskContext>,
+  matched: string[],
+  missing: string[],
+  contraindications: string[],
+  missingEvidence: string[],
+): string {
+  if (contraindications.length > 0) {
+    return `${strategy.id} is blocked by contraindications: ${contraindications.join(", ")}.`;
+  }
+  if (missing.length > 0 || missingEvidence.length > 0) {
+    return `${strategy.id} needs more evidence before activation. Missing signals: ${missing.join(", ") || "none"}; missing evidence: ${missingEvidence.join(", ") || "none"}.`;
+  }
+  if (strategy.id === "human-approval-gate") {
+    return "High-risk signals require an approval gate before any action may proceed.";
+  }
+  if (strategy.id === "lead-only-default") {
+    return "The task is low risk and local enough for the lead to complete without specialist delegation.";
+  }
+  return `${strategy.id} matches ${matched.length} required signal(s) for: ${context.task_summary || "the current task"}.`;
+}
+
+function expectedOutputs(strategyId: string): string[] {
+  const outputsByStrategy: Record<string, string[]> = {
+    "lead-only-default": ["lead_decision_record", "validation_or_not_run_reason"],
+    "parallel-research-swarm": ["research_summary", "source_list", "uncertainty_notes"],
+    "supervisor-router": ["routing_record", "specialist_outputs", "integration_summary"],
+    "sop-assembly-line": ["stage_outputs", "stage_gate_results", "validation_record"],
+    "debate-critic-panel": ["accepted_findings", "rejected_findings", "unresolved_risks", "validation_plan"],
+    "reviewer-tester-loop": ["validation_record", "review_findings", "blocking_issues"],
+    "batch-map-reduce": ["per_item_findings", "reduced_findings", "coverage_record"],
+    "selector-group-chat": ["turn_records", "lead_checkpoints", "final_integration_record"],
+    "human-approval-gate": ["risk_statement", "approval_record", "safer_alternative"],
+  };
+  return outputsByStrategy[strategyId] ?? ["lead_decision_record"];
 }
 
 function mentionsAny(text: string, needles: string[]): boolean {
@@ -420,6 +540,7 @@ function recommendedAction(strategyId: string, eligible: boolean, safetyGate: Ac
 function buildSafetyGate(strategyId: string, context: Required<TaskContext>, eligible: boolean): ActivationPacket["safety_gate"] {
   if (strategyId !== "human-approval-gate") {
     return {
+      requires_human_approval: false,
       approval_required: false,
       approval_record_valid: false,
       approval_record_missing_fields: [],
@@ -452,6 +573,7 @@ function buildSafetyGate(strategyId: string, context: Required<TaskContext>, eli
 
   const valid = missing.length === 0 && mismatch.length === 0;
   return {
+    requires_human_approval: true,
     approval_required: true,
     approval_record_valid: valid,
     approval_record_missing_fields: missing,
@@ -508,17 +630,20 @@ export function selectStrategy(rawContext: TaskContext): ActivationPacket {
 function noEligiblePacket(context: Required<TaskContext>, packets: ActivationPacket[]): ActivationPacket {
   return {
     schema_version: "1.0",
+    selected_strategy: "no-eligible-strategy",
     strategy_id: "no-eligible-strategy",
     strategy_name: "No eligible strategy",
     eligible: false,
     score: 0,
     confidence: "high",
+    reason: "No strategy satisfied required signals, evidence, and contraindication checks.",
     matched_signals: [],
     missing_required_signals: [...new Set(packets.flatMap((packet) => packet.missing_required_signals))].sort(),
     contraindication_hits: [...new Set(packets.flatMap((packet) => packet.contraindication_hits))].sort(),
     lead_decision_required: true,
     recommended_action: "lead_decision_required_no_auto_selection",
     task_summary: context.task_summary,
+    agents: [],
     candidate_agents: [],
     max_agents: 0,
     parallelism: "none",
@@ -526,10 +651,12 @@ function noEligiblePacket(context: Required<TaskContext>, packets: ActivationPac
     missing_evidence: [...new Set(packets.flatMap((packet) => packet.missing_evidence))].sort(),
     stop_conditions: ["lead_collects_more_context", "lead_runs_no_specialist"],
     validation_required: ["lead_records_no_strategy_reason"],
+    expected_outputs: ["lead_decision_record", "missing_evidence_record"],
     handoff_skeletons: [],
     model_decision_record: normalizeModelDecision(context.model_decision),
     model_selection_hints: ["Do not start specialists until a strategy is eligible or the lead records an override."],
     safety_gate: {
+      requires_human_approval: false,
       approval_required: false,
       approval_record_valid: false,
       approval_record_missing_fields: [],

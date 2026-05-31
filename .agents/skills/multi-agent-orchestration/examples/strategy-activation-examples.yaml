@@ -132,6 +132,7 @@ examples:
       required_evidence: ["exact_operation", "exact_target_path_or_resource", "risk_statement", "safer_alternative"]
       recommended_action: "lead_request_human_approval_before_action"
       safety_gate:
+        requires_human_approval: true
         approval_required: true
         approval_record_valid: false
         approval_record_missing_fields: ["approved", "approver_source", "exact_operation", "exact_target", "timestamp", "risk_acknowledged"]
@@ -156,6 +157,7 @@ examples:
     expected_activation:
       recommended_action: "lead_review_approval_record_before_action"
       safety_gate:
+        requires_human_approval: true
         approval_required: true
         approval_record_valid: true
         approval_record_missing_fields: []

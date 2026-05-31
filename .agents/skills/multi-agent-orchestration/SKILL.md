@@ -42,3 +42,4 @@ Use `lead_analysis` to capture the task decomposition and `lead_strategy_reason`
 - `references/research-basis.md`: industry, academic, and open-source basis for each strategy.
 - `references/strategy-playbooks.md`: explicit context fields and SOP for each strategy.
 - `scripts/`: read-only selector and per-strategy packet generators.
+- `fixtures/`, `schemas/`, and `snapshots/`: deterministic validation spine for strategy activation behavior.

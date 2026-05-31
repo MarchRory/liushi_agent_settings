@@ -23,11 +23,18 @@ Validate and run examples:
 npm run typecheck
 npm run validate
 npm run examples
+npm run fixtures
 npm run wrappers
 npm run select -- --context-file context.json
 ```
 
 The same npm commands work in Windows PowerShell, macOS Bash/Zsh, and Linux shells when run from the skill directory.
+
+From the repository root, run the full validation spine:
+
+```bash
+npm run validate
+```
 
 ## Repository Hygiene
 
