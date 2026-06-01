@@ -1,0 +1,63 @@
+{
+  "schema_version": "1.0",
+  "selected_strategy": "lead-only-default",
+  "strategy_id": "lead-only-default",
+  "strategy_name": "Lead-only default",
+  "eligible": true,
+  "score": 1,
+  "confidence": "high",
+  "reason": "The task is low risk and local enough for the lead to complete without specialist delegation.",
+  "matched_signals": [
+    "small_task"
+  ],
+  "missing_required_signals": [],
+  "contraindication_hits": [],
+  "lead_decision_required": true,
+  "recommended_action": "lead_review_activation_packet",
+  "task_summary": "Fix one typo in README.",
+  "agents": [],
+  "candidate_agents": [],
+  "max_agents": 0,
+  "parallelism": "none",
+  "required_evidence": [
+    "reason_lead_only_is_sufficient",
+    "risk_is_low"
+  ],
+  "missing_evidence": [],
+  "stop_conditions": [
+    "task_completed_by_lead",
+    "new_signal_requires_specialist"
+  ],
+  "validation_required": [
+    "answer_or_change_reviewed_by_lead"
+  ],
+  "expected_outputs": [
+    "lead_decision_record",
+    "validation_or_not_run_reason"
+  ],
+  "handoff_skeletons": [],
+  "model_decision_record": {
+    "chosen_model": "",
+    "reasoning_effort": "",
+    "cost_risk": "",
+    "why_this_model": "",
+    "fallback_model": ""
+  },
+  "model_selection_hints": [
+    "Use the current lead model; do not spawn specialists for cost-free appearances."
+  ],
+  "safety_gate": {
+    "requires_human_approval": false,
+    "approval_required": false,
+    "approval_record_valid": false,
+    "approval_record_missing_fields": [],
+    "approval_record_mismatch": [],
+    "action_may_proceed": false
+  },
+  "script_contract": {
+    "read_only": true,
+    "network": false,
+    "repo_mutation": false,
+    "starts_agents": false
+  }
+}

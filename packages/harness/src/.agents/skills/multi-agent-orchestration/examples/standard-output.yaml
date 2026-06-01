@@ -1,0 +1,70 @@
+activation_packet:
+  schema_version: "1.0"
+  strategy_id: "reviewer-tester-loop"
+  strategy_name: "Reviewer and tester loop"
+  eligible: true
+  score: 1.0
+  confidence: "high"
+  matched_signals:
+    - "code_modified_or_to_modify"
+    - "validation_available"
+  missing_required_signals: []
+  contraindication_hits: []
+  lead_decision_required: true
+  recommended_action: "lead_review_activation_packet"
+  task_summary: "Modify orchestration strategy code and validate regressions."
+  candidate_agents:
+    - "tester"
+    - "reviewer"
+    - "critic"
+  max_agents: 3
+  parallelism: "sequential_or_parallel_after_change"
+  required_evidence:
+    - "diff_scope"
+    - "validation_commands"
+    - "review_scope"
+  missing_evidence: []
+  stop_conditions:
+    - "validation_passed_or_deferred"
+    - "blocking_review_finding"
+    - "retry_budget_exhausted"
+  validation_required:
+    - "run_narrowest_relevant_check"
+    - "report_not_run_reason_when_needed"
+  handoff_skeletons:
+    - from: "lead"
+      to: "tester"
+      role: "tester"
+      objective: "Handle the tester portion of reviewer-tester-loop."
+      relevant_context: "Modify orchestration strategy code and validate regressions."
+      files_or_sources:
+        - ".agents/skills/multi-agent-orchestration"
+      constraints:
+        - "Stay within delegated role."
+        - "Return specialist_output with evidence."
+        - "Do not start other strategies or agents."
+      risks:
+        - "cross-platform runtime drift"
+      expected_output: "specialist_output"
+      validation_required:
+        - "run_narrowest_relevant_check"
+        - "report_not_run_reason_when_needed"
+  model_decision_record:
+    chosen_model: ""
+    reasoning_effort: ""
+    cost_risk: ""
+    why_this_model: ""
+    fallback_model: ""
+  model_selection_hints:
+    - "Use tester on lower to medium reasoning unless failure diagnosis is complex; use reviewer with enough reasoning for risk analysis."
+  safety_gate:
+    approval_required: false
+    approval_record_valid: false
+    approval_record_missing_fields: []
+    approval_record_mismatch: []
+    action_may_proceed: false
+  script_contract:
+    read_only: true
+    network: false
+    repo_mutation: false
+    starts_agents: false

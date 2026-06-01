@@ -1,0 +1,6 @@
+interface:
+  display_name: "Memory Update"
+  short_description: "Safe proposal and curation of durable harness memory."
+  default_prompt: "Use $memory-update to propose durable memory entries from this task, without writing them unless approved."
+policy:
+  allow_implicit_invocation: true

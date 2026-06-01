@@ -1,0 +1,6 @@
+interface:
+  display_name: "Lifecycle Planning"
+  short_description: "Task framing and staged execution planning for complex work."
+  default_prompt: "Use $lifecycle-planning to frame this complex task and choose the right execution stages."
+policy:
+  allow_implicit_invocation: true

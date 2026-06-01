@@ -1,0 +1,53 @@
+validation_policy:
+  default:
+    after_code_change:
+      mandatory_when_available:
+        - run_narrowest_relevant_test
+        - run_typecheck_if_behavior_or_types_changed
+        - run_lint_if_style_or_static_rules_may_be_affected
+
+    after_documentation_change:
+      mandatory_when_available:
+        - inspect_rendering_or_structure_when_possible
+        - check_links_when_relevant
+
+    after_config_change:
+      mandatory_when_available:
+        - parse_changed_config
+        - run_config_validation_if_available
+        - run_build_or_startup_check_if_safe
+
+  gates:
+    block_delivery_when:
+      - mandatory_available_validation_failed
+      - changed_config_cannot_be_parsed
+      - security_policy_change_not_reviewed
+      - destructive_operation_missing_approval_record
+    requires_override_record_when:
+      - validation_command_unavailable
+      - validation_is_unsafe
+      - validation_would_require_external_credentials
+    override_record_required_fields:
+      - reason
+      - recommended_command
+      - risk
+      - follow_up_owner
+
+  reporting:
+    required_fields:
+      - status
+      - commands_run
+      - result
+      - failures
+      - unverified_risks
+
+  statuses:
+    - passed
+    - failed
+    - partially_verified
+    - not_run
+
+  not_run_requires:
+    - reason
+    - recommended_command
+    - risk

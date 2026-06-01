@@ -1,0 +1,148 @@
+{
+  "schema_version": "1.0",
+  "selected_strategy": "human-approval-gate",
+  "strategy_id": "human-approval-gate",
+  "strategy_name": "Human approval gate",
+  "eligible": false,
+  "score": 0.7,
+  "confidence": "medium",
+  "reason": "human-approval-gate needs more evidence before activation. Missing signals: none; missing evidence: exact_operation, exact_target_path_or_resource, risk_statement, safer_alternative.",
+  "matched_signals": [
+    "high_risk_operation"
+  ],
+  "missing_required_signals": [],
+  "contraindication_hits": [],
+  "lead_decision_required": true,
+  "recommended_action": "lead_decision_required_no_auto_selection",
+  "task_summary": "Delete production database migration files and reset git history.",
+  "agents": [
+    "critic",
+    "reviewer"
+  ],
+  "candidate_agents": [
+    "critic",
+    "reviewer",
+    "tester"
+  ],
+  "max_agents": 2,
+  "parallelism": "gate_then_optional_review",
+  "required_evidence": [
+    "exact_operation",
+    "exact_target_path_or_resource",
+    "risk_statement",
+    "safer_alternative"
+  ],
+  "missing_evidence": [
+    "exact_operation",
+    "exact_target_path_or_resource",
+    "risk_statement",
+    "safer_alternative"
+  ],
+  "stop_conditions": [
+    "approval_granted",
+    "approval_denied",
+    "safer_read_only_path_available"
+  ],
+  "validation_required": [
+    "approval_record_before_action",
+    "lead_confirms_scope"
+  ],
+  "expected_outputs": [
+    "risk_statement",
+    "approval_record",
+    "safer_alternative"
+  ],
+  "handoff_skeletons": [
+    {
+      "from": "lead",
+      "to": "critic",
+      "role": "critic",
+      "objective": "Handle the critic portion of human-approval-gate.",
+      "relevant_context": "Delete production database migration files and reset git history.",
+      "files_or_sources": [],
+      "constraints": [
+        "Stay within delegated role.",
+        "Return specialist_output with evidence.",
+        "Do not start other strategies or agents."
+      ],
+      "risks": [],
+      "expected_output": "specialist_output",
+      "validation_required": [
+        "approval_record_before_action",
+        "lead_confirms_scope"
+      ]
+    },
+    {
+      "from": "lead",
+      "to": "reviewer",
+      "role": "reviewer",
+      "objective": "Handle the reviewer portion of human-approval-gate.",
+      "relevant_context": "Delete production database migration files and reset git history.",
+      "files_or_sources": [],
+      "constraints": [
+        "Stay within delegated role.",
+        "Return specialist_output with evidence.",
+        "Do not start other strategies or agents."
+      ],
+      "risks": [],
+      "expected_output": "specialist_output",
+      "validation_required": [
+        "approval_record_before_action",
+        "lead_confirms_scope"
+      ]
+    },
+    {
+      "from": "lead",
+      "to": "tester",
+      "role": "tester",
+      "objective": "Handle the tester portion of human-approval-gate.",
+      "relevant_context": "Delete production database migration files and reset git history.",
+      "files_or_sources": [],
+      "constraints": [
+        "Stay within delegated role.",
+        "Return specialist_output with evidence.",
+        "Do not start other strategies or agents."
+      ],
+      "risks": [],
+      "expected_output": "specialist_output",
+      "validation_required": [
+        "approval_record_before_action",
+        "lead_confirms_scope"
+      ]
+    }
+  ],
+  "model_decision_record": {
+    "chosen_model": "",
+    "reasoning_effort": "",
+    "cost_risk": "",
+    "why_this_model": "",
+    "fallback_model": ""
+  },
+  "model_selection_hints": [
+    "Use high-reasoning review for security-sensitive approval analysis; prioritize capability over cost."
+  ],
+  "safety_gate": {
+    "requires_human_approval": true,
+    "approval_required": true,
+    "approval_record_valid": false,
+    "approval_record_missing_fields": [
+      "approved",
+      "approver_source",
+      "exact_operation",
+      "exact_target",
+      "timestamp",
+      "risk_acknowledged"
+    ],
+    "approval_record_mismatch": [
+      "approved_not_true",
+      "risk_not_acknowledged"
+    ],
+    "action_may_proceed": false
+  },
+  "script_contract": {
+    "read_only": true,
+    "network": false,
+    "repo_mutation": false,
+    "starts_agents": false
+  }
+}

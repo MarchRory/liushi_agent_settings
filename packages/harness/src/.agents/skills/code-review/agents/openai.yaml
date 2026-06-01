@@ -1,0 +1,6 @@
+interface:
+  display_name: "Code Review"
+  short_description: "Risk-focused review for code, config, docs, and policy changes."
+  default_prompt: "Use $code-review to review the current changes and report blocking issues first."
+policy:
+  allow_implicit_invocation: true

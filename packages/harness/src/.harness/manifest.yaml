@@ -1,0 +1,148 @@
+schema_version: "1.0"
+kind: "agent-harness-manifest"
+
+package:
+  name: "liushi-agent-settings-codex"
+  runtime: "codex"
+  branch: "release/codex-main-en"
+  description: "Codex-focused Lead+Sub agent harness starter."
+
+branch_split:
+  codex_branch: "release/codex-main-en"
+  claude_code_branch: "release/claude-code-main"
+  rule: "Claude Code-specific adapter files belong on the Claude Code branch, not this Codex branch."
+
+runtime_entrypoints:
+  root_instruction: "AGENTS.md"
+  codex_config: ".codex/config.toml"
+  codex_agents_glob: ".codex/agents/*.toml"
+
+codex_agents:
+  - name: "architect"
+    entrypoint: ".codex/agents/architect.toml"
+    sidecar_dir: ".codex/agents/architect"
+  - name: "codebase-explorer"
+    entrypoint: ".codex/agents/codebase-explorer.toml"
+    sidecar_dir: ".codex/agents/codebase-explorer"
+  - name: "critic"
+    entrypoint: ".codex/agents/critic.toml"
+    sidecar_dir: ".codex/agents/critic"
+  - name: "implementer"
+    entrypoint: ".codex/agents/implementer.toml"
+    sidecar_dir: ".codex/agents/implementer"
+  - name: "memory-curator"
+    entrypoint: ".codex/agents/memory-curator.toml"
+    sidecar_dir: ".codex/agents/memory-curator"
+  - name: "researcher"
+    entrypoint: ".codex/agents/researcher.toml"
+    sidecar_dir: ".codex/agents/researcher"
+  - name: "reviewer"
+    entrypoint: ".codex/agents/reviewer.toml"
+    sidecar_dir: ".codex/agents/reviewer"
+  - name: "tester"
+    entrypoint: ".codex/agents/tester.toml"
+    sidecar_dir: ".codex/agents/tester"
+
+codex_agent_sidecar_layout:
+  directory_guide: ".codex/agents/README.md"
+  required_files:
+    - "AGENT.md"
+    - "references/workflow.md"
+    - "references/output-schema.md"
+    - "examples/handoff.yaml"
+    - "examples/standard-output.yaml"
+  rule: "Keep runtime TOML files at .codex/agents/*.toml; same-name directories are expansion resources only."
+
+skills:
+  root: ".agents/skills"
+  modules:
+    - "code-review"
+    - "context-recovery"
+    - "eval-runner"
+    - "harness-evolution"
+    - "lifecycle-planning"
+    - "memory-update"
+    - "multi-agent-orchestration"
+    - "research-synthesis"
+  required_files:
+    - "SKILL.md"
+    - "agents/openai.yaml"
+    - "references/workflow.md"
+    - "references/output-schema.md"
+    - "examples/standard-output.yaml"
+  orchestration_skill:
+    root: ".agents/skills/multi-agent-orchestration"
+    registry: ".agents/skills/multi-agent-orchestration/references/strategy-registry.toml"
+    model_policy: ".agents/skills/multi-agent-orchestration/references/model-policy.toml"
+    platform_compatibility: ".agents/skills/multi-agent-orchestration/references/platform-compatibility.md"
+    research_basis: ".agents/skills/multi-agent-orchestration/references/research-basis.md"
+    strategy_playbooks: ".agents/skills/multi-agent-orchestration/references/strategy-playbooks.md"
+    package_manifest: ".agents/skills/multi-agent-orchestration/package.json"
+    package_lock: ".agents/skills/multi-agent-orchestration/package-lock.json"
+    selector_script: ".agents/skills/multi-agent-orchestration/scripts/select_strategy.ts"
+    strategy_scripts_glob: ".agents/skills/multi-agent-orchestration/scripts/strategies/*.ts"
+
+harness_resources:
+  manifest: ".harness/manifest.yaml"
+  docs:
+    - "docs/harness/evaluation.md"
+    - "docs/harness/context-governance.md"
+    - "docs/harness/lifecycle.md"
+    - "docs/harness/memory.md"
+    - "docs/harness/orchestration.md"
+    - "docs/harness/runtime-adapters.md"
+  policies:
+    - ".harness/policies/memory-write-policy.yaml"
+    - ".harness/policies/context-governance.yaml"
+    - ".harness/policies/safety.yaml"
+    - ".harness/policies/validation.yaml"
+  evals:
+    - ".harness/evals/rubric.yaml"
+    - ".harness/evals/tasks.yaml"
+    - ".harness/fixtures/manifest.yaml"
+  memory_templates:
+    - ".harness/memory/decisions.md"
+    - ".harness/memory/failures.md"
+    - ".harness/memory/lessons.md"
+    - ".harness/memory/open-questions.md"
+    - ".harness/memory/project-facts.md"
+    - ".harness/memory/user-preferences.md"
+  state_dirs:
+    - ".harness/reports"
+    - ".harness/traces"
+  reports:
+    - ".harness/reports/2026-06-01-codex-optimization-report.md"
+
+install:
+  global_codex:
+    copy:
+      - from: "AGENTS.md"
+        to: "~/.codex/AGENTS.md"
+      - from: ".codex/agents/*.toml"
+        to: "~/.codex/agents/*.toml"
+      - from: ".codex/agents/<agent-name>/"
+        to: "~/.codex/agents/<agent-name>/"
+  project_scoped:
+    keep:
+      - "AGENTS.md"
+      - ".codex/config.toml"
+      - ".codex/agents/*.toml"
+      - ".codex/agents/<agent-name>/"
+      - ".agents/skills/"
+      - ".agents/skills/multi-agent-orchestration/"
+      - ".harness/"
+      - "docs/harness/"
+
+verification:
+  commands:
+    - "npm run validate"
+    - "npm run validate:static"
+    - "cd .agents/skills/multi-agent-orchestration && npm run fixtures"
+    - "codex debug prompt-input"
+  platform_commands:
+    windows:
+      - "npm run validate"
+    macos:
+      - "npm run validate"
+    linux:
+      - "npm run validate"
