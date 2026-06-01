@@ -1,0 +1,12 @@
+{
+  "name": "@liushi-agent-settings/harness",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "files": [
+    "bin",
+    "scripts",
+    "src"
+  ],
+  "scripts": {}
+}

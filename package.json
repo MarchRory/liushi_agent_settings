@@ -3,6 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "workspaces": [
+    "packages/harness",
+    "packages/codex-config",
+    "packages/harness/src/.agents/skills/multi-agent-orchestration"
+  ],
   "scripts": {
     "prevalidate": "npm --prefix .agents/skills/multi-agent-orchestration ci",
     "validate": "node .harness/scripts/validate-static.mjs && npm --prefix .agents/skills/multi-agent-orchestration run typecheck && npm --prefix .agents/skills/multi-agent-orchestration run validate && npm --prefix .agents/skills/multi-agent-orchestration run examples && npm --prefix .agents/skills/multi-agent-orchestration run fixtures && npm --prefix .agents/skills/multi-agent-orchestration run wrappers",
