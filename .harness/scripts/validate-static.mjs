@@ -19,6 +19,8 @@ const checks = {
   yaml_files: 0,
   skill_metadata_files: 0,
   codex_agent_files: 0,
+  codex_agent_specificity_checks: 0,
+  codex_agent_sidecar_specificity_checks: 0,
   schema_files: 0,
   fixture_files: 0,
   eval_tasks: 0,
@@ -110,9 +112,29 @@ function validateCodexAgents() {
     if (!["read-only", "workspace-write"].includes(agent.sandbox_mode)) {
       failures.push(`${rel(file)}: sandbox_mode must be read-only or workspace-write`);
     }
+    if (typeof agent.developer_instructions !== "string" || agent.developer_instructions.length === 0) {
+      failures.push(`${rel(file)}: missing developer_instructions`);
+    } else {
+      for (const marker of ["Specialized lane:", "Reject / redirect:", "Sharp deliverables:"]) {
+        checks.codex_agent_specificity_checks += 1;
+        if (!agent.developer_instructions.includes(marker)) {
+          failures.push(`${rel(file)}: developer_instructions missing specificity marker ${marker}`);
+        }
+      }
+    }
     const sidecar = join(codexSource, ".codex", "agents", name);
     for (const required of ["AGENT.md", "references/workflow.md", "references/output-schema.md", "examples/handoff.yaml", "examples/standard-output.yaml"]) {
       if (!existsSync(join(sidecar, required))) failures.push(`${rel(sidecar)}: missing ${required}`);
+    }
+    const sidecarAgent = join(sidecar, "AGENT.md");
+    if (existsSync(sidecarAgent)) {
+      const sidecarText = readText(sidecarAgent);
+      for (const marker of ["## Specialized Lane", "## Reject / Redirect", "## Sharp Deliverables"]) {
+        checks.codex_agent_sidecar_specificity_checks += 1;
+        if (!sidecarText.includes(marker)) {
+          failures.push(`${rel(sidecarAgent)}: missing sidecar specificity section ${marker}`);
+        }
+      }
     }
   }
 }
