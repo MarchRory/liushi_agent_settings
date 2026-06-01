@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { createRequire } from "node:module";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { spawnSync } from "node:child_process";
@@ -10,7 +11,8 @@ type Example = {
   context: Record<string, unknown>;
 };
 
-const tsxCli = resolve(skillDir(), "node_modules", "tsx", "dist", "cli.mjs");
+const requireFromSkill = createRequire(resolve(skillDir(), "package.json"));
+const tsxCli = requireFromSkill.resolve("tsx/cli");
 const examplesPath = resolve(skillDir(), "examples", "strategy-activation-examples.yaml");
 const examples = (parseYaml(readFileSync(examplesPath, "utf8")) as { examples: Example[] }).examples;
 const contextByStrategy = new Map(examples.map((example) => [example.strategy_id, example.context]));

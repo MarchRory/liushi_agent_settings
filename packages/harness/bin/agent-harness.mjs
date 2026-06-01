@@ -21,7 +21,7 @@ const adapterSource = join(adapterRoot, "src");
 const mappings = [
   { source: join(harnessSource, "AGENTS.md"), target: join(targetRoot, "AGENTS.md") },
   { source: join(harnessSource, ".agents"), target: join(targetRoot, ".agents") },
-  { source: join(harnessSource, ".harness"), target: join(targetRoot, ".harness") },
+  { source: join(harnessSource, ".harness"), target: join(targetRoot, ".harness"), ignoreRootScripts: true },
   { source: join(packageRoot, "scripts"), target: join(targetRoot, ".harness", "scripts") },
   { source: join(harnessSource, "docs", "harness"), target: join(targetRoot, "docs", "harness") },
   { source: join(harnessSource, "docs", "validation-spine.md"), target: join(targetRoot, "docs", "validation-spine.md") },
@@ -49,13 +49,13 @@ function syncMapping(mapping) {
   const diffs = checkMapping(mapping);
   if (diffs.length === 0) return [];
 
-  const sourceFiles = listFiles(mapping.source);
+  const sourceFiles = listFiles(mapping.source, mapping);
   const sourceSet = new Set(sourceFiles.map((file) => relative(mapping.source, file)));
   if (isDirectory(mapping.source)) {
     mkdirSync(mapping.target, { recursive: true });
-    for (const targetFile of listFiles(mapping.target)) {
+    for (const targetFile of listFiles(mapping.target, mapping)) {
       const relPath = relative(mapping.target, targetFile);
-      if (!sourceSet.has(relPath) && !isIgnored(relPath, targetFile)) {
+      if (!sourceSet.has(relPath) && !isIgnored(relPath, targetFile, mapping)) {
         rmSync(targetFile, { force: true });
       }
     }
@@ -87,12 +87,12 @@ function checkMapping(mapping) {
     return diffs;
   }
 
-  const sourceFiles = listFiles(mapping.source);
-  const targetFiles = listFiles(mapping.target);
+  const sourceFiles = listFiles(mapping.source, mapping);
+  const targetFiles = listFiles(mapping.target, mapping);
   const sourceSet = new Set(sourceFiles.map((file) => normalize(relative(mapping.source, file))));
   const targetSet = new Set(
     targetFiles
-      .filter((file) => !isIgnored(relative(mapping.target, file), file))
+      .filter((file) => !isIgnored(relative(mapping.target, file), file, mapping))
       .map((file) => normalize(relative(mapping.target, file))),
   );
 
@@ -125,24 +125,24 @@ function copyFile(source, target) {
   writeFileSync(target, readFileSync(source));
 }
 
-function listFiles(root) {
+function listFiles(root, mapping, base = root) {
   if (!existsSync(root)) return [];
   if (!isDirectory(root)) return [root];
   const files = [];
   for (const entry of readdirSync(root)) {
     const path = join(root, entry);
-    const relPath = relative(root, path);
-    if (isIgnored(relPath, path)) continue;
-    if (isDirectory(path)) files.push(...listFiles(path));
+    const relPath = relative(base, path);
+    if (isIgnored(relPath, path, mapping)) continue;
+    if (isDirectory(path)) files.push(...listFiles(path, mapping, base));
     else files.push(path);
   }
   return files.sort();
 }
 
-function isIgnored(relPath, absolutePath) {
+function isIgnored(relPath, absolutePath, mapping = {}) {
   const normalized = normalize(relPath);
   if (normalized.split("/").includes("node_modules")) return true;
-  if (normalized === "scripts" || normalized.startsWith("scripts/")) return true;
+  if (mapping.ignoreRootScripts && (normalized === "scripts" || normalized.startsWith("scripts/"))) return true;
   if (normalized.startsWith("reports/live-model-ab-")) return true;
   if (normalized.includes("/reports/live-model-ab-")) return true;
   return absolutePath.includes(`${sep()}node_modules${sep()}`);
