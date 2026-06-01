@@ -7,6 +7,36 @@ package:
   branch: "release/codex-main-en"
   description: "Codex-focused Lead+Sub agent harness starter."
 
+monorepo:
+  source_authority: "packages"
+  materialization_rule: "Root AGENTS.md, .agents, .harness, .codex, and docs/harness are generated from package sources with npm run sync."
+  source_packages:
+    harness:
+      package: "packages/harness"
+      source_root: "packages/harness/src"
+      owns:
+        - "AGENTS.md"
+        - ".agents/skills/"
+        - ".harness/"
+        - "docs/harness/"
+        - "docs/validation-spine.md"
+    codex_config:
+      package: "packages/codex-config"
+      source_root: "packages/codex-config/src"
+      owns:
+        - ".codex/config.toml"
+        - ".codex/agents/"
+  materialized_root_targets:
+    - "AGENTS.md"
+    - ".agents/"
+    - ".harness/"
+    - ".codex/"
+    - "docs/harness/"
+    - "docs/validation-spine.md"
+  commands:
+    sync: "npm run sync"
+    check: "npm run check:sync"
+
 branch_split:
   codex_branch: "release/codex-main-en"
   claude_code_branch: "release/claude-code-main"
@@ -112,6 +142,8 @@ harness_resources:
     - ".harness/traces"
   reports:
     - ".harness/reports/2026-06-01-codex-optimization-report.md"
+  generated_reports_ignored:
+    - ".harness/reports/live-model-ab-*"
 
 install:
   global_codex:
@@ -135,9 +167,10 @@ install:
 
 verification:
   commands:
+    - "npm run check:sync"
     - "npm run validate"
     - "npm run validate:static"
-    - "cd .agents/skills/multi-agent-orchestration && npm run fixtures"
+    - "npm --workspace multi-agent-orchestration-skill run fixtures"
     - "codex debug prompt-input"
   platform_commands:
     windows:

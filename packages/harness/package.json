@@ -13,6 +13,7 @@
   ],
   "scripts": {
     "check": "node bin/agent-harness.mjs check --target ../.. --adapter ../codex-config",
+    "eval:live-model-ab": "node scripts/run-live-model-ab.mjs",
     "sync": "node bin/agent-harness.mjs sync --target ../.. --adapter ../codex-config",
     "validate:static": "node scripts/validate-static.mjs"
   }

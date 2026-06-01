@@ -11,6 +11,7 @@
   "scripts": {
     "sync": "node packages/harness/bin/agent-harness.mjs sync --target . --adapter packages/codex-config",
     "check:sync": "node packages/harness/bin/agent-harness.mjs check --target . --adapter packages/codex-config",
+    "eval:live-model-ab": "node packages/harness/scripts/run-live-model-ab.mjs",
     "validate": "npm run check:sync && npm run validate:static && npm run validate:orchestration",
     "validate:static": "node packages/harness/scripts/validate-static.mjs",
     "validate:orchestration": "npm --workspace multi-agent-orchestration-skill run typecheck && npm --workspace multi-agent-orchestration-skill run validate && npm --workspace multi-agent-orchestration-skill run examples && npm --workspace multi-agent-orchestration-skill run fixtures && npm --workspace multi-agent-orchestration-skill run wrappers"

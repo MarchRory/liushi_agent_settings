@@ -7,11 +7,13 @@ The validation spine makes Codex harness changes measurable before they reach us
 From the repository root:
 
 ```powershell
+npm ci
 npm run validate
 ```
 
 This command installs the orchestration skill dependencies and runs:
 
+- package-to-root materialization drift check
 - static TOML/YAML/JSON/frontmatter checks for harness configuration
 - Codex agent sidecar layout checks
 - TypeScript typecheck for `multi-agent-orchestration`
@@ -43,9 +45,9 @@ Task 1 requires all four metrics to be `1.0`. A lower value means a strategy cha
 
 1. Add a JSON fixture under `.agents/skills/multi-agent-orchestration/fixtures/`.
 2. Include `id`, `description`, `input`, and `expected.selected_strategy`.
-3. Run `npm --prefix .agents/skills/multi-agent-orchestration run fixtures:update`.
-4. Review the generated snapshot under `.agents/skills/multi-agent-orchestration/snapshots/`.
-5. Run `npm run validate`.
+3. Run `npm --workspace multi-agent-orchestration-skill run fixtures:update`.
+4. Review the generated snapshot under `packages/harness/src/.agents/skills/multi-agent-orchestration/snapshots/`.
+5. Run `npm run sync` and `npm run validate`.
 
 Use fixtures for routing behavior that must stay stable, especially:
 
@@ -56,11 +58,11 @@ Use fixtures for routing behavior that must stay stable, especially:
 
 ## Add A Strategy
 
-1. Add the strategy to `.agents/skills/multi-agent-orchestration/references/strategy-registry.toml`.
-2. Add or update a model hint in `.agents/skills/multi-agent-orchestration/references/model-policy.toml`.
-3. Add a read-only wrapper script under `.agents/skills/multi-agent-orchestration/scripts/strategies/`.
-4. Add an activation example in `.agents/skills/multi-agent-orchestration/examples/strategy-activation-examples.yaml`.
+1. Add the strategy to `packages/harness/src/.agents/skills/multi-agent-orchestration/references/strategy-registry.toml`.
+2. Add or update a model hint in `packages/harness/src/.agents/skills/multi-agent-orchestration/references/model-policy.toml`.
+3. Add a read-only wrapper script under `packages/harness/src/.agents/skills/multi-agent-orchestration/scripts/strategies/`.
+4. Add an activation example in `packages/harness/src/.agents/skills/multi-agent-orchestration/examples/strategy-activation-examples.yaml`.
 5. Add a deterministic fixture and snapshot if the strategy affects default selection.
-6. Run `npm run validate`.
+6. Run `npm run sync` and `npm run validate`.
 
 Strategy scripts must only print activation packets. They must not start agents, mutate repositories, or access the network.

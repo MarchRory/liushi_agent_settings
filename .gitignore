@@ -1,3 +1,4 @@
 node_modules
+.harness/reports/live-model-ab-*
 .DS_Store
 Thumbs.db

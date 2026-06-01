@@ -4,6 +4,23 @@ This branch provides a reusable Lead+Sub agent harness for Codex. It separates a
 
 Claude Code support is intentionally split to the `release/claude-code-main` branch. Keep this branch Codex-focused.
 
+## Monorepo Source Model
+
+This repository is an npm workspaces monorepo. Package sources are authoritative:
+
+```txt
+packages/harness/src/        # Runtime-neutral harness instructions, skills, policies, evals, and docs
+packages/harness/scripts/    # Validation and live-model eval utilities
+packages/codex-config/src/   # Codex adapter: .codex/config.toml and custom agents
+```
+
+The root `AGENTS.md`, `.agents/`, `.harness/`, `.codex/`, and `docs/harness/` directories are materialized copies committed for Codex project-local discovery. Edit the package source first, then run:
+
+```powershell
+npm run sync
+npm run check:sync
+```
+
 ## Structure
 
 ```txt
@@ -19,6 +36,8 @@ AGENTS.md                 # Short Codex lead-agent contract
 .harness/memory/*         # Durable project memory templates
 .harness/evals/*          # Reproducible harness eval definitions
 docs/harness/*            # Detailed protocols and runtime notes
+packages/harness/*        # Source-authoritative harness package
+packages/codex-config/*   # Source-authoritative Codex adapter package
 ```
 
 Each skill is a folder, not a single large prompt. The standard layout is:
@@ -81,7 +100,7 @@ Run the full deterministic validation spine before publishing harness changes:
 npm run validate
 ```
 
-The root command installs the orchestration skill dependencies and checks TOML/YAML/JSON syntax, skill frontmatter, Codex agent sidecar layout, TypeScript type safety, strategy registry integrity, activation examples, deterministic fixtures, activation-packet snapshots, and wrapper contracts.
+The root command first checks that materialized root files match package sources, then checks TOML/YAML/JSON syntax, skill frontmatter, Codex agent sidecar layout, TypeScript type safety, strategy registry integrity, activation examples, deterministic fixtures, activation-packet snapshots, and wrapper contracts.
 
 The current Task 1 gate is quantitative:
 
