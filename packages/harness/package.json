@@ -3,10 +3,17 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "bin": {
+    "agent-harness": "bin/agent-harness.mjs"
+  },
   "files": [
     "bin",
     "scripts",
     "src"
   ],
-  "scripts": {}
+  "scripts": {
+    "check": "node bin/agent-harness.mjs check --target ../.. --adapter ../codex-config",
+    "sync": "node bin/agent-harness.mjs sync --target ../.. --adapter ../codex-config",
+    "validate:static": "node scripts/validate-static.mjs"
+  }
 }

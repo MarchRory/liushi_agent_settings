@@ -5,8 +5,10 @@ import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const scriptDir = dirname(fileURLToPath(import.meta.url));
-const repoRoot = resolve(scriptDir, "..", "..");
-const orchestrationRoot = join(repoRoot, ".agents", "skills", "multi-agent-orchestration");
+const repoRoot = findRepoRoot(scriptDir);
+const harnessSource = join(repoRoot, "packages", "harness", "src");
+const codexSource = join(repoRoot, "packages", "codex-config", "src");
+const orchestrationRoot = join(harnessSource, ".agents", "skills", "multi-agent-orchestration");
 const requireFromSkill = createRequire(join(orchestrationRoot, "package.json"));
 const { parse: parseToml } = requireFromSkill("smol-toml");
 const { parse: parseYaml } = requireFromSkill("yaml");
@@ -24,16 +26,16 @@ const checks = {
 };
 
 validateTomlFiles([
-  join(repoRoot, ".codex", "config.toml"),
-  ...listFiles(join(repoRoot, ".codex", "agents"), ".toml"),
+  join(codexSource, ".codex", "config.toml"),
+  ...listFiles(join(codexSource, ".codex", "agents"), ".toml"),
   ...listFiles(join(orchestrationRoot, "references"), ".toml"),
 ]);
 validateYamlFiles([
-  join(repoRoot, ".harness", "manifest.yaml"),
-  ...listFiles(join(repoRoot, ".harness", "policies"), ".yaml"),
-  ...listFiles(join(repoRoot, ".harness", "evals"), ".yaml"),
-  join(repoRoot, ".harness", "fixtures", "manifest.yaml"),
-  ...listFiles(join(repoRoot, ".agents", "skills"), ".yaml"),
+  join(harnessSource, ".harness", "manifest.yaml"),
+  ...listFiles(join(harnessSource, ".harness", "policies"), ".yaml"),
+  ...listFiles(join(harnessSource, ".harness", "evals"), ".yaml"),
+  join(harnessSource, ".harness", "fixtures", "manifest.yaml"),
+  ...listFiles(join(harnessSource, ".agents", "skills"), ".yaml"),
 ]);
 validateSkillMetadata();
 validateCodexAgents();
@@ -69,7 +71,7 @@ function validateYamlFiles(files) {
 }
 
 function validateSkillMetadata() {
-  const skillRoots = listDirs(join(repoRoot, ".agents", "skills"));
+  const skillRoots = listDirs(join(harnessSource, ".agents", "skills"));
   for (const skillRoot of skillRoots) {
     const skillPath = join(skillRoot, "SKILL.md");
     checks.skill_metadata_files += 1;
@@ -94,7 +96,7 @@ function validateSkillMetadata() {
 }
 
 function validateCodexAgents() {
-  for (const file of listFiles(join(repoRoot, ".codex", "agents"), ".toml")) {
+  for (const file of listFiles(join(codexSource, ".codex", "agents"), ".toml")) {
     checks.codex_agent_files += 1;
     const agent = parseToml(readText(file));
     const name = agent.name;
@@ -108,7 +110,7 @@ function validateCodexAgents() {
     if (!["read-only", "workspace-write"].includes(agent.sandbox_mode)) {
       failures.push(`${rel(file)}: sandbox_mode must be read-only or workspace-write`);
     }
-    const sidecar = join(repoRoot, ".codex", "agents", name);
+    const sidecar = join(codexSource, ".codex", "agents", name);
     for (const required of ["AGENT.md", "references/workflow.md", "references/output-schema.md", "examples/handoff.yaml", "examples/standard-output.yaml"]) {
       if (!existsSync(join(sidecar, required))) failures.push(`${rel(sidecar)}: missing ${required}`);
     }
@@ -148,7 +150,7 @@ function validateFixtureFiles() {
 }
 
 function validateEvalTasks() {
-  const tasksPath = join(repoRoot, ".harness", "evals", "tasks.yaml");
+  const tasksPath = join(harnessSource, ".harness", "evals", "tasks.yaml");
   const parsed = readYaml(tasksPath);
   const tasks = parsed?.eval_tasks;
   if (!Array.isArray(tasks)) {
@@ -175,7 +177,7 @@ function validateEvalTasks() {
 }
 
 function validateRubric() {
-  const rubricPath = join(repoRoot, ".harness", "evals", "rubric.yaml");
+  const rubricPath = join(harnessSource, ".harness", "evals", "rubric.yaml");
   const parsed = readYaml(rubricPath);
   const harnessCriteria = parsed?.rubric?.categories?.harness_quality?.criteria ?? {};
   for (const criterion of [
@@ -190,7 +192,7 @@ function validateRubric() {
 }
 
 function validateGovernancePolicies() {
-  const memoryPolicyPath = join(repoRoot, ".harness", "policies", "memory-write-policy.yaml");
+  const memoryPolicyPath = join(harnessSource, ".harness", "policies", "memory-write-policy.yaml");
   const memoryPolicy = readYaml(memoryPolicyPath)?.memory_write_policy;
   const trusted = memoryPolicy?.write_flow?.trusted_memory_curation_command;
   if (!trusted) {
@@ -206,7 +208,7 @@ function validateGovernancePolicies() {
     }
   }
 
-  const contextPolicyPath = join(repoRoot, ".harness", "policies", "context-governance.yaml");
+  const contextPolicyPath = join(harnessSource, ".harness", "policies", "context-governance.yaml");
   const contextPolicy = readYaml(contextPolicyPath)?.context_governance;
   for (const required of [
     "hypothesis",
@@ -288,4 +290,14 @@ function rel(path) {
 
 function basename(path) {
   return path.split(/[\\/]/).pop();
+}
+
+function findRepoRoot(start) {
+  let current = resolve(start);
+  while (true) {
+    if (existsSync(join(current, "package.json")) && existsSync(join(current, "packages", "harness"))) return current;
+    const parent = dirname(current);
+    if (parent === current) throw new Error(`could not find repository root from ${start}`);
+    current = parent;
+  }
 }
