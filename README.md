@@ -14,12 +14,14 @@ packages/harness/scripts/    # Validation and live-model eval utilities
 packages/codex-config/src/   # Codex adapter: .codex/config.toml and custom agents
 ```
 
-The root `AGENTS.md`, `.agents/`, `.harness/`, `.codex/`, and `docs/harness/` directories are materialized copies committed for Codex project-local discovery. Edit the package source first, then run:
+The root `AGENTS.md`, `.agents/`, `.harness/`, `.codex/`, and `docs/harness/` directories are materialized copies committed for Codex project-local discovery. Edit the package source first, then use the internal sync commands:
 
 ```powershell
 npm run sync
 npm run check:sync
 ```
+
+Internal sync is intentionally strict: `npm run sync` writes root materialized files and deletes root extras that are not present in package source. This keeps the repository checkout reproducible.
 
 ## Structure
 
@@ -115,13 +117,58 @@ See `docs/validation-spine.md` for fixture and strategy extension rules.
 
 ### Project-Scoped Mode
 
-Use this when attaching the harness to one repository.
+Use this when attaching the harness to one repository. Project install mode is safer than internal sync:
 
-1. Copy this directory into the target project root.
-2. Fill project commands only after inspecting package files, lockfiles, task runners, or docs.
-3. Calibrate `.harness/policies/safety.yaml` for project-specific sensitive paths and domains.
-4. Seed `.harness/memory/project-facts.md` only with verified facts.
-5. Run one onboarding eval from `.harness/evals/tasks.yaml` before using the full harness on risky work.
+- `agent-harness sync` is a dry-run by default and reports planned changes without writing files.
+- Extra target files are preserved by default; pass `--delete-extra=true` only when you want strict pruning.
+- `.agent-harnessignore` protects target-relative local paths from check/sync, including strict pruning.
+- `--overlay <dir>` applies a target-relative local overlay after package sources, so local project choices can be managed without editing package source.
+
+1. Preview the install from the harness checkout:
+
+```powershell
+node packages/harness/bin/agent-harness.mjs sync --target <target-project> --adapter packages/codex-config
+```
+
+2. Write after reviewing the dry-run:
+
+```powershell
+node packages/harness/bin/agent-harness.mjs sync --write --target <target-project> --adapter packages/codex-config
+```
+
+3. Preserve local extensions with `.agent-harnessignore` in the target project:
+
+```gitignore
+.agents/skills/local-only/
+.codex/agents/local-*.toml
+```
+
+4. Apply local managed overrides with an overlay directory:
+
+```txt
+my-overlay/
+  AGENTS.md
+  .agents/skills/project-review/SKILL.md
+  .codex/agents/project-reviewer.toml
+```
+
+```powershell
+node packages/harness/bin/agent-harness.mjs sync --write --overlay my-overlay --target <target-project> --adapter packages/codex-config
+node packages/harness/bin/agent-harness.mjs check --overlay my-overlay --target <target-project> --adapter packages/codex-config
+```
+
+5. Fill project commands only after inspecting package files, lockfiles, task runners, or docs.
+6. Calibrate `.harness/policies/safety.yaml` for project-specific sensitive paths and domains.
+7. Seed `.harness/memory/project-facts.md` only with verified facts.
+8. Run one onboarding eval from `.harness/evals/tasks.yaml` before using the full harness on risky work.
+
+Strict install pruning is opt-in:
+
+```powershell
+node packages/harness/bin/agent-harness.mjs sync --write --delete-extra=true --target <target-project> --adapter packages/codex-config
+```
+
+Do not use strict pruning unless `.agent-harnessignore` already protects local project-owned files.
 
 Verification:
 

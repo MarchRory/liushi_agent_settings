@@ -17,7 +17,7 @@ packages/harness/src/.harness/manifest.yaml
 packages/harness/src/.agents/skills/*
 ```
 
-This layer contains shared operating principles, protocols, policies, skills, and durable state. Keep it runtime-neutral. The root copies are materialized with `npm run sync` for Codex discovery.
+This layer contains shared operating principles, protocols, policies, skills, and durable state. Keep it runtime-neutral. The root copies in this repository are materialized with the internal `npm run sync` command for Codex discovery.
 
 ## Codex Layer
 
@@ -35,7 +35,10 @@ Codex custom agents use TOML files with `name`, `description`, and `developer_in
 Recommended installation modes:
 
 - Global: copy `AGENTS.md` to `~/.codex/`, or create a local `AGENTS.override.md` there if your Codex setup uses one. Copy `.codex/agents/*.toml` plus matching `.codex/agents/<agent-name>/` sidecar directories to `~/.codex/agents/`.
-- Project-scoped: run `npm run sync` to materialize `AGENTS.md`, `.codex/config.toml`, `.codex/agents/*.toml`, and `.codex/agents/<agent-name>/` sidecar directories in the project root.
+- Internal repository sync: run `npm run sync` from this checkout to strictly materialize package sources into the repository root.
+- Project-scoped install: run `agent-harness sync --target <project>` first as a dry-run. Add `--write` only after reviewing the planned changes. Extra target files are preserved unless `--delete-extra=true` is passed.
+
+Project-scoped installs can use `.agent-harnessignore` in the target project to protect local target-relative paths from check/sync. Use `--overlay <dir>` when a project needs managed local overrides or additions without editing package source.
 
 Do not move runtime TOML files into sidecar directories. The root-level `.toml` files are the discovery surface; same-name directories are for role workflows, schemas, and examples.
 

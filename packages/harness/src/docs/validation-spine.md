@@ -47,7 +47,7 @@ Task 1 requires all four metrics to be `1.0`. A lower value means a strategy cha
 2. Include `id`, `description`, `input`, and `expected.selected_strategy`.
 3. Run `npm --workspace multi-agent-orchestration-skill run fixtures:update`.
 4. Review the generated snapshot under `packages/harness/src/.agents/skills/multi-agent-orchestration/snapshots/`.
-5. Run `npm run sync` and `npm run validate`.
+5. Run internal sync and validation from this repository root: `npm run sync` and `npm run validate`.
 
 Use fixtures for routing behavior that must stay stable, especially:
 
@@ -63,6 +63,6 @@ Use fixtures for routing behavior that must stay stable, especially:
 3. Add a read-only wrapper script under `packages/harness/src/.agents/skills/multi-agent-orchestration/scripts/strategies/`.
 4. Add an activation example in `packages/harness/src/.agents/skills/multi-agent-orchestration/examples/strategy-activation-examples.yaml`.
 5. Add a deterministic fixture and snapshot if the strategy affects default selection.
-6. Run `npm run sync` and `npm run validate`.
+6. Run internal sync and validation from this repository root: `npm run sync` and `npm run validate`.
 
 Strategy scripts must only print activation packets. They must not start agents, mutate repositories, or access the network.

@@ -9,10 +9,11 @@
     "packages/harness/src/.agents/skills/multi-agent-orchestration"
   ],
   "scripts": {
-    "sync": "node packages/harness/bin/agent-harness.mjs sync --target . --adapter packages/codex-config",
-    "check:sync": "node packages/harness/bin/agent-harness.mjs check --target . --adapter packages/codex-config",
+    "sync": "node packages/harness/bin/agent-harness.mjs sync --write --delete-extra=true --target . --adapter packages/codex-config",
+    "check:sync": "node packages/harness/bin/agent-harness.mjs check --delete-extra=true --target . --adapter packages/codex-config",
     "eval:live-model-ab": "node packages/harness/scripts/run-live-model-ab.mjs",
-    "validate": "npm run check:sync && npm run validate:static && npm run validate:orchestration",
+    "test:sync-cli": "node packages/harness/tests/sync-cli.test.mjs",
+    "validate": "npm run check:sync && npm run test:sync-cli && npm run validate:static && npm run validate:orchestration",
     "validate:static": "node packages/harness/scripts/validate-static.mjs",
     "validate:orchestration": "npm --workspace multi-agent-orchestration-skill run typecheck && npm --workspace multi-agent-orchestration-skill run validate && npm --workspace multi-agent-orchestration-skill run examples && npm --workspace multi-agent-orchestration-skill run fixtures && npm --workspace multi-agent-orchestration-skill run wrappers"
   }
