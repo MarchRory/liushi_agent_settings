@@ -9,6 +9,14 @@ The first version measures readiness, not live agent effectiveness. It checks wh
 Run from the repository root:
 
 ```powershell
+npm run eval:codex
+```
+
+This writes `.codex-eval-runs/latest-smoke/summary.json` and `.codex-eval-runs/latest-smoke/dashboard.html`.
+
+Run the narrower gates when debugging:
+
+```powershell
 npm run eval:codex:validate
 npm run eval:codex:static
 npm run eval:codex:smoke

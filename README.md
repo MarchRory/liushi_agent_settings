@@ -122,13 +122,21 @@ See `docs/validation-spine.md` for fixture and strategy extension rules.
 Use this when checking whether the Codex adapter and custom-agent definitions are ready for controlled evaluation:
 
 ```powershell
+npm run eval:codex
+```
+
+This generates the latest deterministic smoke summary and dashboard under `.codex-eval-runs/latest-smoke/`.
+
+Run the individual gates when you need narrower evidence:
+
+```powershell
 npm run eval:codex:validate
 npm run eval:codex:static
 npm run eval:codex:smoke
 npm run eval:codex:dashboard
 ```
 
-These commands are deterministic readiness gates. They validate dataset/schema integrity, real agent references, per-agent fixture coverage, runtime and sidecar markers, root/source materialization, anti-hype guardrails, and dashboard rendering. They do not prove live model task success or superiority over a baseline.
+These commands are deterministic readiness gates. They validate dataset/schema integrity, real agent references, per-agent fixture coverage, runtime and sidecar markers, root/source materialization, anti-hype guardrails, and dashboard rendering. `npm run validate` also runs the non-dashboard Codex eval gates so CI protects the eval mechanism. These checks do not prove live model task success or superiority over a baseline.
 
 Generated eval outputs go under `.codex-eval-runs/` and are ignored by git. Keep raw traces, dashboards, and reports local unless a separate publication decision promotes a sanitized summary.
 
