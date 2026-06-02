@@ -1,0 +1,82 @@
+schema_version = "1.0"
+
+[policy]
+mode = "lead_runtime_choice"
+rule = "The lead chooses models at activation time and records the reason. This file provides hints, not hard-coded assignments."
+required_record_fields = ["chosen_model", "reasoning_effort", "cost_risk", "why_this_model", "fallback_model"]
+
+[[role_hints]]
+role = "codebase-explorer"
+default_bias = "fast_low_cost"
+use_stronger_when = ["large_unknown_codebase", "cross_language_analysis", "security_sensitive_scope"]
+
+[[role_hints]]
+role = "researcher"
+default_bias = "reasoning_strong_for_synthesis"
+use_stronger_when = ["recent_external_knowledge_required", "conflicting_sources", "high_impact_recommendation"]
+
+[[role_hints]]
+role = "architect"
+default_bias = "reasoning_strong"
+use_stronger_when = ["public_interface_change", "cross_module_design", "durable_protocol"]
+
+[[role_hints]]
+role = "implementer"
+default_bias = "coding_strong"
+use_stronger_when = ["multi_file_change", "ambiguous_requirements", "high_regression_risk"]
+
+[[role_hints]]
+role = "tester"
+default_bias = "medium"
+use_stronger_when = ["non_obvious_failure", "flaky_behavior", "security_or_data_integrity_test"]
+
+[[role_hints]]
+role = "reviewer"
+default_bias = "medium_to_strong"
+use_stronger_when = ["security_or_data_integrity", "public_api", "multi_file_diff"]
+
+[[role_hints]]
+role = "critic"
+default_bias = "reasoning_strong"
+use_stronger_when = ["high_uncertainty", "high_failure_cost", "architecture_or_policy_decision"]
+
+[[role_hints]]
+role = "memory-curator"
+default_bias = "medium"
+use_stronger_when = ["instruction_like_content", "sensitive_evidence", "ambiguous_durability"]
+
+[[strategy_hints]]
+strategy = "lead-only-default"
+model_bias = "inherit_lead"
+
+[[strategy_hints]]
+strategy = "parallel-research-swarm"
+model_bias = "mixed_fast_collection_strong_synthesis"
+
+[[strategy_hints]]
+strategy = "supervisor-router"
+model_bias = "lead_reasoning_strong_routes_mixed"
+
+[[strategy_hints]]
+strategy = "sop-assembly-line"
+model_bias = "stage_specific"
+
+[[strategy_hints]]
+strategy = "debate-critic-panel"
+model_bias = "reasoning_strong"
+
+[[strategy_hints]]
+strategy = "reviewer-tester-loop"
+model_bias = "tester_medium_reviewer_strong_if_risk"
+
+[[strategy_hints]]
+strategy = "batch-map-reduce"
+model_bias = "map_fast_reduce_strong"
+
+[[strategy_hints]]
+strategy = "selector-group-chat"
+model_bias = "lead_strong_specialists_mixed"
+
+[[strategy_hints]]
+strategy = "human-approval-gate"
+model_bias = "reasoning_strong_prioritize_safety"

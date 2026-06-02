@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.local/liushi-agent-settings/activation-packet.schema.json",
+  "title": "ActivationPacket",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schema_version",
+    "selected_strategy",
+    "strategy_id",
+    "eligible",
+    "confidence",
+    "reason",
+    "agents",
+    "missing_evidence",
+    "safety_gate",
+    "expected_outputs",
+    "script_contract"
+  ],
+  "properties": {
+    "schema_version": { "const": "1.0" },
+    "selected_strategy": { "type": "string" },
+    "strategy_id": { "type": "string" },
+    "eligible": { "type": "boolean" },
+    "confidence": { "type": "string", "enum": ["low", "medium", "high"] },
+    "reason": { "type": "string", "minLength": 1 },
+    "agents": { "type": "array", "items": { "type": "string" } },
+    "missing_evidence": { "type": "array", "items": { "type": "string" } },
+    "safety_gate": {
+      "type": "object",
+      "required": ["requires_human_approval", "action_may_proceed"],
+      "properties": {
+        "requires_human_approval": { "type": "boolean" },
+        "approval_required": { "type": "boolean" },
+        "approval_record_valid": { "type": "boolean" },
+        "approval_record_missing_fields": { "type": "array", "items": { "type": "string" } },
+        "approval_record_mismatch": { "type": "array", "items": { "type": "string" } },
+        "action_may_proceed": { "type": "boolean" }
+      }
+    },
+    "expected_outputs": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+    "script_contract": {
+      "type": "object",
+      "required": ["read_only", "network", "repo_mutation", "starts_agents"],
+      "properties": {
+        "read_only": { "const": true },
+        "network": { "const": false },
+        "repo_mutation": { "const": false },
+        "starts_agents": { "const": false }
+      }
+    }
+  }
+}

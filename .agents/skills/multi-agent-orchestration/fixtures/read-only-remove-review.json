@@ -1,0 +1,20 @@
+{
+  "id": "read-only-remove-review",
+  "description": "Read-only review wording that mentions removing code should not trigger the human approval gate.",
+  "input": {
+    "task": "Review a PR to remove an unused import from a non-sensitive utility file.",
+    "task_type": "pr_review",
+    "complexity": 2,
+    "risk": 2,
+    "requires_code_changes": false,
+    "validation_commands": ["npm test -- utils.test.js"]
+  },
+  "expected": {
+    "selected_strategy": "reviewer-tester-loop",
+    "eligible": true,
+    "agents": ["tester", "reviewer"],
+    "safety_gate": {
+      "requires_human_approval": false
+    }
+  }
+}

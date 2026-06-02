@@ -1,0 +1,17 @@
+handoff:
+  from: "lead"
+  to: "implementer"
+  role: "implementer"
+  objective: "Add sidecar directories for Codex preset agents without moving TOML entrypoints."
+  relevant_context: "TOML files at .codex/agents/*.toml are runtime entrypoints."
+  files_or_sources:
+    - ".codex/agents/"
+    - ".harness/manifest.yaml"
+  expected_output: "Focused file changes and validation notes."
+  constraints:
+    - "Do not move or rename TOML files."
+  risks:
+    - "Moving TOML files can break discovery."
+  validation_required:
+    - "TOML parse check."
+    - "Manifest coverage check."

@@ -1,0 +1,15 @@
+handoff:
+  from: "lead"
+  to: "researcher"
+  role: "researcher"
+  objective: "Verify current Codex custom-agent discovery rules."
+  relevant_context: "Use official OpenAI sources first."
+  files_or_sources:
+    - "https://developers.openai.com/codex/subagents"
+  expected_output: "Source-backed findings and implications for this repo."
+  constraints:
+    - "Do not rely on community sources if official docs answer it."
+  risks:
+    - "Runtime schema may have changed."
+  validation_required:
+    - "Cite sources."

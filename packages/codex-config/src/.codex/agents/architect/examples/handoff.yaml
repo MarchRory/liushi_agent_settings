@@ -1,0 +1,16 @@
+handoff:
+  from: "lead"
+  to: "architect"
+  role: "architect"
+  objective: "Design the smallest durable structure for a cross-module harness change."
+  relevant_context: "Root instructions should stay short; detailed protocols live in docs and sidecar resources."
+  files_or_sources:
+    - "AGENTS.md"
+    - "docs/harness/orchestration.md"
+  expected_output: "Architecture recommendation with tradeoffs and validation gates."
+  constraints:
+    - "Avoid broad rewrites."
+  risks:
+    - "Over-abstraction may increase context cost."
+  validation_required:
+    - "Cite affected files and contracts."

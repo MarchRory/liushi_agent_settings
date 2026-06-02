@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.local/liushi-agent-settings/fixture.schema.json",
+  "title": "StrategyFixture",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "description", "input", "expected"],
+  "properties": {
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+    "description": { "type": "string", "minLength": 1 },
+    "input": { "$ref": "strategy-context.schema.json" },
+    "expected": {
+      "type": "object",
+      "required": ["selected_strategy"],
+      "additionalProperties": true,
+      "properties": {
+        "selected_strategy": { "type": "string" },
+        "eligible": { "type": "boolean" },
+        "agents": { "type": "array", "items": { "type": "string" } },
+        "safety_gate": { "type": "object" },
+        "expected_outputs": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  }
+}

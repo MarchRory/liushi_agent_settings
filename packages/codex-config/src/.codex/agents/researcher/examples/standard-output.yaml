@@ -1,0 +1,10 @@
+specialist_output:
+  role: "researcher"
+  summary: "Source-backed research result."
+  findings: []
+  recommendations: []
+  risks: []
+  evidence: []
+  confidence: "medium"
+  confidence_basis: "Based on cited sources."
+  follow_up_needed: []

@@ -1,0 +1,19 @@
+{
+  "name": "@liushi-agent-settings/codex-evals",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "files": [
+    "datasets",
+    "rubrics",
+    "schemas",
+    "scripts",
+    "README.md"
+  ],
+  "scripts": {
+    "validate": "node scripts/validate-datasets.mjs",
+    "static": "node scripts/run-static-eval.mjs --out .codex-eval-runs/latest-static",
+    "smoke": "node scripts/run-codex-smoke.mjs --out .codex-eval-runs/latest-smoke",
+    "dashboard": "npm run smoke && node scripts/render-dashboard.mjs --summary .codex-eval-runs/latest-smoke/summary.json --out .codex-eval-runs/latest-smoke/dashboard.html"
+  }
+}

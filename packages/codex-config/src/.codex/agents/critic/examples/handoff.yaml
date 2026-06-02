@@ -1,0 +1,16 @@
+handoff:
+  from: "lead"
+  to: "critic"
+  role: "critic"
+  objective: "Find hidden risks in the proposed harness directory layout."
+  relevant_context: "Codex discovers TOML files at .codex/agents/*.toml."
+  files_or_sources:
+    - ".codex/agents/"
+    - "README.md"
+  expected_output: "Concrete failure modes and simpler alternatives."
+  constraints:
+    - "Do not edit files."
+  risks:
+    - "Directory cleanup could break runtime discovery."
+  validation_required:
+    - "Cite evidence."

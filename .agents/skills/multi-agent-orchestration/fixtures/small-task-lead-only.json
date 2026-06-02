@@ -1,0 +1,21 @@
+{
+  "id": "small-task-lead-only",
+  "description": "A tiny local task should stay with the lead and avoid specialist overhead.",
+  "input": {
+    "task": "Fix one typo in README.",
+    "task_type": "small_fix",
+    "complexity": 1,
+    "risk": 1,
+    "parallelizable": false,
+    "requires_code_changes": false,
+    "requires_tests": false
+  },
+  "expected": {
+    "selected_strategy": "lead-only-default",
+    "eligible": true,
+    "agents": [],
+    "safety_gate": {
+      "requires_human_approval": false
+    }
+  }
+}
