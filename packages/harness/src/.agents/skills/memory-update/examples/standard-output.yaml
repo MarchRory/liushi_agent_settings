@@ -1,7 +1,0 @@
-memory_update:
-  proposed_entries: []
-  written_entries: []
-  rejected_candidates:
-    - "Temporary task detail."
-  duplicate_check: "No existing memory checked or no duplicates found."
-  rationale: "No durable memory written without explicit approval."

@@ -1,6 +1,0 @@
-node_modules
-.codex-eval-runs/
-.codex-eval-reports/
-.harness/reports/live-model-ab-*
-.DS_Store
-Thumbs.db

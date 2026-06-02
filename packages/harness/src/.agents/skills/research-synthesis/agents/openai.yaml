@@ -1,6 +1,0 @@
-interface:
-  display_name: "Research Synthesis"
-  short_description: "Primary-source research synthesis with uncertainty tracking."
-  default_prompt: "Use $research-synthesis to investigate this question with source-backed findings."
-policy:
-  allow_implicit_invocation: true

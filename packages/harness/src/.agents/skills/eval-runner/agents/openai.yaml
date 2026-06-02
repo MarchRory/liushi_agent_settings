@@ -1,6 +1,0 @@
-interface:
-  display_name: "Eval Runner"
-  short_description: "Evidence-based harness evaluation against fixtures and rubrics."
-  default_prompt: "Use $eval-runner to score this harness run against the configured rubric."
-policy:
-  allow_implicit_invocation: true

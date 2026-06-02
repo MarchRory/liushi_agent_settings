@@ -13,6 +13,7 @@ import {
   rel,
   resolveRepoPath,
   scoreRate,
+  validateJsonSchemaLite,
   writeJson,
 } from "./lib.mjs";
 import { validateDatasets } from "./validate-datasets.mjs";
@@ -76,6 +77,8 @@ export function runStaticEval(options = {}) {
     workflow_contract_passes: 0,
     materialized_sync_checks: 0,
     materialized_sync_passes: 0,
+    sidecar_materialized_sync_checks: 0,
+    sidecar_materialized_sync_passes: 0,
     coverage_checks: 0,
     coverage_passes: 0,
     anti_hype_guardrail_checks: 0,
@@ -110,11 +113,19 @@ export function runStaticEval(options = {}) {
       "examples/standard-output.yaml",
     ];
     for (const required of requiredSidecarFiles) {
+      const sourcePath = join(sidecarSource, required);
+      const rootPath = join(paths.codexRoot, "agents", agent.name, required);
       checks.sidecar_contract_checks += 1;
-      if (existsSync(join(sidecarSource, required))) {
+      if (existsSync(sourcePath)) {
         checks.sidecar_contract_passes += 1;
       } else {
         failures.push(`${rel(paths.repoRoot, sidecarSource)}: missing ${required}`);
+      }
+      checks.sidecar_materialized_sync_checks += 1;
+      if (existsSync(sourcePath) && existsSync(rootPath) && readText(sourcePath) === readText(rootPath)) {
+        checks.sidecar_materialized_sync_passes += 1;
+      } else {
+        failures.push(`${rel(paths.repoRoot, rootPath)}: materialized sidecar differs from package source`);
       }
     }
     const agentDoc = join(sidecarSource, "AGENT.md");
@@ -164,13 +175,14 @@ export function runStaticEval(options = {}) {
     sidecar_contract_pass_rate: scoreRate(checks.sidecar_contract_passes, checks.sidecar_contract_checks),
     workflow_contract_pass_rate: scoreRate(checks.workflow_contract_passes, checks.workflow_contract_checks),
     materialized_sync_pass_rate: scoreRate(checks.materialized_sync_passes, checks.materialized_sync_checks),
+    sidecar_materialized_sync_pass_rate: scoreRate(checks.sidecar_materialized_sync_passes, checks.sidecar_materialized_sync_checks),
     agent_fixture_coverage_pass_rate: scoreRate(checks.coverage_passes, checks.coverage_checks),
     anti_hype_guardrail_pass_rate: scoreRate(checks.anti_hype_guardrail_passes, checks.anti_hype_guardrail_checks),
   };
   const readinessScore = Math.min(...Object.values(scores));
   scores.codex_only_static_readiness = readinessScore;
 
-  return {
+  const summary = {
     run_type: "codex-only-static-readiness-v0.1",
     timestamp: nowIso(),
     configuration: "packages/codex-config/src/.codex",
@@ -209,6 +221,13 @@ export function runStaticEval(options = {}) {
     ],
     final_status: failures.length === 0 && readinessScore === 1 ? "pass" : "fail",
   };
+  const summarySchema = readJson(join(paths.schemasRoot, "codex-eval-summary.schema.json"));
+  const summarySchemaFailures = validateJsonSchemaLite(summary, summarySchema, "static_summary");
+  if (summarySchemaFailures.length > 0) {
+    summary.failures.push(...summarySchemaFailures);
+    summary.final_status = "fail";
+  }
+  return summary;
 }
 
 function main() {

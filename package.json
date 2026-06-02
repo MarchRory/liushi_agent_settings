@@ -13,12 +13,16 @@
     "sync": "node packages/harness/bin/agent-harness.mjs sync --write --delete-extra=true --target . --adapter packages/codex-config",
     "check:sync": "node packages/harness/bin/agent-harness.mjs check --delete-extra=true --target . --adapter packages/codex-config",
     "eval:live-model-ab": "node packages/harness/scripts/run-live-model-ab.mjs",
+    "eval:codex": "npm run eval:codex:dashboard",
+    "eval:codex:all": "npm run eval:codex:validate && npm run eval:codex:static && npm run eval:codex:smoke && npm run eval:codex:dashboard",
     "eval:codex:validate": "npm --workspace @liushi-agent-settings/codex-evals run validate",
     "eval:codex:static": "npm --workspace @liushi-agent-settings/codex-evals run static",
     "eval:codex:smoke": "npm --workspace @liushi-agent-settings/codex-evals run smoke",
     "eval:codex:dashboard": "npm --workspace @liushi-agent-settings/codex-evals run dashboard",
     "test:sync-cli": "node packages/harness/tests/sync-cli.test.mjs",
-    "validate": "npm run check:sync && npm run test:sync-cli && npm run validate:static && npm run validate:orchestration",
+    "test:codex-evals": "npm --workspace @liushi-agent-settings/codex-evals run test",
+    "validate": "npm run check:sync && npm run test:sync-cli && npm run validate:static && npm run validate:codex-evals && npm run validate:orchestration",
+    "validate:codex-evals": "npm run eval:codex:validate && npm run eval:codex:static && npm run eval:codex:smoke && npm run test:codex-evals",
     "validate:static": "node packages/harness/scripts/validate-static.mjs",
     "validate:orchestration": "npm --workspace multi-agent-orchestration-skill run typecheck && npm --workspace multi-agent-orchestration-skill run validate && npm --workspace multi-agent-orchestration-skill run examples && npm --workspace multi-agent-orchestration-skill run fixtures && npm --workspace multi-agent-orchestration-skill run wrappers"
   }

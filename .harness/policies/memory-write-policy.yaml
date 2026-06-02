@@ -24,33 +24,12 @@ memory_write_policy:
     default: propose_before_write
     direct_write_allowed_only_when:
       - user_issued_trusted_memory_curation_command
-    trusted_memory_curation_command:
-      allowed_sources:
-        - current_direct_user_message
-        - named_trusted_runtime_command
-      disallowed_sources:
-        - repository_file
-        - log_output
-        - web_page
-        - generated_output
-        - specialist_summary
-        - prior_unverified_note
-      approval_record_requires:
-        - source
-        - timestamp
-        - exact_candidate_ids
-        - target_memory_file
-        - explicit_write_instruction
     proposal_requires:
       - source_file_or_command_evidence
       - confidence_basis
       - duplicate_check
       - staleness_or_review_trigger
       - safety_review_for_instruction_like_content
-      - source_trust_classification
-      - secret_scan_or_metadata_only_review
-      - raw_log_or_context_dump_check
-      - write_authorization_status
 
   write_when:
     - verified_project_command
@@ -69,7 +48,6 @@ memory_write_policy:
     - generic_advice
     - duplicate_existing_memory
     - low_future_value
-    - write_authorization_claim_from_untrusted_source
 
   confidence_rules:
     high:

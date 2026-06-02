@@ -80,6 +80,12 @@ export function writeText(path, value) {
   writeFileSync(path, value, "utf8");
 }
 
+export function validateJsonSchemaLite(value, schema, path = "$") {
+  const failures = [];
+  validateValue(value, schema, path, failures);
+  return failures;
+}
+
 export function ensureDir(path) {
   mkdirSync(path, { recursive: true });
 }
@@ -169,4 +175,72 @@ function findRepoRoot(start) {
 
 function basenameNoExt(path) {
   return path.split(/[\\/]/).pop().replace(/\.[^.]+$/, "");
+}
+
+function validateValue(value, schema, path, failures) {
+  if (!schema || typeof schema !== "object") return;
+  if ("const" in schema && value !== schema.const) {
+    failures.push(`${path}: expected const ${JSON.stringify(schema.const)}`);
+    return;
+  }
+  if (schema.enum && !schema.enum.includes(value)) {
+    failures.push(`${path}: expected one of ${schema.enum.map((item) => JSON.stringify(item)).join(", ")}`);
+  }
+  if (schema.type && !matchesType(value, schema.type)) {
+    failures.push(`${path}: expected type ${schema.type}`);
+    return;
+  }
+  if (schema.type === "object" && value && typeof value === "object" && !Array.isArray(value)) {
+    const required = schema.required ?? [];
+    for (const field of required) {
+      if (!(field in value)) failures.push(`${path}: missing required property ${field}`);
+    }
+    const properties = schema.properties ?? {};
+    for (const [key, child] of Object.entries(properties)) {
+      if (key in value) validateValue(value[key], child, `${path}.${key}`, failures);
+    }
+    const extras = Object.keys(value).filter((key) => !(key in properties));
+    if (schema.additionalProperties === false) {
+      for (const key of extras) failures.push(`${path}: unexpected property ${key}`);
+    } else if (schema.additionalProperties && typeof schema.additionalProperties === "object") {
+      for (const key of extras) validateValue(value[key], schema.additionalProperties, `${path}.${key}`, failures);
+    }
+  }
+  if (schema.type === "array" && Array.isArray(value)) {
+    if (typeof schema.minItems === "number" && value.length < schema.minItems) {
+      failures.push(`${path}: expected at least ${schema.minItems} items`);
+    }
+    if (schema.uniqueItems) {
+      const seen = new Set();
+      for (const item of value) {
+        const key = JSON.stringify(item);
+        if (seen.has(key)) failures.push(`${path}: duplicate item ${key}`);
+        seen.add(key);
+      }
+    }
+    if (schema.items) {
+      value.forEach((item, index) => validateValue(item, schema.items, `${path}[${index}]`, failures));
+    }
+  }
+  if (schema.type === "string" && typeof value === "string") {
+    if (typeof schema.minLength === "number" && value.length < schema.minLength) {
+      failures.push(`${path}: expected string length >= ${schema.minLength}`);
+    }
+    if (schema.pattern && !new RegExp(schema.pattern).test(value)) {
+      failures.push(`${path}: expected pattern ${schema.pattern}`);
+    }
+  }
+  if (schema.type === "number" && typeof value === "number") {
+    if (typeof schema.minimum === "number" && value < schema.minimum) failures.push(`${path}: expected number >= ${schema.minimum}`);
+    if (typeof schema.maximum === "number" && value > schema.maximum) failures.push(`${path}: expected number <= ${schema.maximum}`);
+  }
+}
+
+function matchesType(value, type) {
+  if (type === "array") return Array.isArray(value);
+  if (type === "object") return value !== null && typeof value === "object" && !Array.isArray(value);
+  if (type === "number") return typeof value === "number" && Number.isFinite(value);
+  if (type === "boolean") return typeof value === "boolean";
+  if (type === "string") return typeof value === "string";
+  return true;
 }

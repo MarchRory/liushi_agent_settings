@@ -1,6 +1,0 @@
-interface:
-  display_name: "Harness Evolution"
-  short_description: "Evidence-gated changes to harness context, memory, skills, agents, hooks, and evals."
-  default_prompt: "Use $harness-evolution to evaluate whether this harness change is worth making."
-policy:
-  allow_implicit_invocation: true

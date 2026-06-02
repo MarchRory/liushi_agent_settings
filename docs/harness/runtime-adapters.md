@@ -7,24 +7,24 @@ This branch documents the Codex adapter for the harness. Claude Code-specific ad
 ## Common Layer
 
 ```txt
-packages/harness/src/AGENTS.md
+AGENTS.md
 README.md
-packages/harness/src/docs/harness/*
-packages/harness/src/.harness/memory/*
-packages/harness/src/.harness/evals/*
-packages/harness/src/.harness/policies/*
-packages/harness/src/.harness/manifest.yaml
-packages/harness/src/.agents/skills/*
+docs/harness/*
+.harness/memory/*
+.harness/evals/*
+.harness/policies/*
+.harness/manifest.yaml
+.agents/skills/*
 ```
 
-This layer contains shared operating principles, protocols, policies, skills, and durable state. Keep it runtime-neutral. The root copies in this repository are materialized with the internal `npm run sync` command for Codex discovery.
+This layer contains shared operating principles, protocols, policies, skills, and durable state. Keep it runtime-neutral.
 
 ## Codex Layer
 
 ```txt
-packages/codex-config/src/.codex/config.toml
-packages/codex-config/src/.codex/agents/*.toml
-packages/codex-config/src/.codex/agents/<agent-name>/*
+.codex/config.toml
+.codex/agents/*.toml
+.codex/agents/<agent-name>/*
 ```
 
 Codex custom agents use TOML files with `name`, `description`, and `developer_instructions`. This repository also declares `sandbox_mode` per role:
@@ -35,21 +35,17 @@ Codex custom agents use TOML files with `name`, `description`, and `developer_in
 Recommended installation modes:
 
 - Global: copy `AGENTS.md` to `~/.codex/`, or create a local `AGENTS.override.md` there if your Codex setup uses one. Copy `.codex/agents/*.toml` plus matching `.codex/agents/<agent-name>/` sidecar directories to `~/.codex/agents/`.
-- Internal repository sync: run `npm run sync` from this checkout to strictly materialize package sources into the repository root.
-- Project-scoped install: run `agent-harness sync --target <project>` first as a dry-run. Add `--write` only after reviewing the planned changes. Extra target files are preserved unless `--delete-extra=true` is passed.
-
-Project-scoped installs can use `.agent-harnessignore` in the target project to protect local target-relative paths from check/sync. Use `--overlay <dir>` when a project needs managed local overrides or additions without editing package source.
+- Project-scoped: keep `AGENTS.md`, `.codex/config.toml`, `.codex/agents/*.toml`, and `.codex/agents/<agent-name>/` sidecar directories in the project root.
 
 Do not move runtime TOML files into sidecar directories. The root-level `.toml` files are the discovery surface; same-name directories are for role workflows, schemas, and examples.
 
 Verification:
 
 ```powershell
-npm run check:sync
 codex --ask-for-approval never "Show which instruction files and custom agents are active."
 codex --cd . --ask-for-approval never "Show which instruction files are active."
 codex debug prompt-input
-npm run validate:static
+npx --yes yaml-lint .harness/manifest.yaml
 ```
 
 `codex debug prompt-input` verifies prompt-loaded instructions. Custom-agent TOML files may be discovered by agent tooling rather than included directly in the root prompt.
@@ -60,4 +56,4 @@ Runtime-specific precedence differs, but use this harness rule consistently: pro
 
 ## Adapter Design Rule
 
-Do not duplicate large protocols across runtime-specific files. Keep canonical protocols in `packages/harness/src/docs/harness`, `packages/harness/src/.agents/skills`, and `packages/harness/src/.harness/policies`, and keep adapters focused on discovery, tool access, sandboxing, and verification.
+Do not duplicate large protocols across runtime-specific files. Keep canonical protocols in `docs/harness`, `.agents/skills`, and `.harness/policies`, and keep adapters focused on discovery, tool access, sandboxing, and verification.

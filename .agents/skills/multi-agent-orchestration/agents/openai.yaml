@@ -1,6 +1,0 @@
-interface:
-  display_name: "Multi-Agent Orchestration"
-  short_description: "Advisory activation packets for Lead+Sub collaboration."
-  default_prompt: "Use $multi-agent-orchestration to generate an advisory activation packet; do not dispatch agents from the script."
-policy:
-  allow_implicit_invocation: true
