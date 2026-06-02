@@ -12,6 +12,7 @@ This repository is an npm workspaces monorepo. Package sources are authoritative
 packages/harness/src/        # Runtime-neutral harness instructions, skills, policies, evals, and docs
 packages/harness/scripts/    # Validation and live-model eval utilities
 packages/codex-config/src/   # Codex adapter: .codex/config.toml and custom agents
+packages/codex-evals/        # Codex adapter eval datasets, rubrics, schemas, and runners
 ```
 
 The root `AGENTS.md`, `.agents/`, `.harness/`, `.codex/`, and `docs/harness/` directories are materialized copies committed for Codex project-local discovery. Edit the package source first, then use the internal sync commands:
@@ -40,6 +41,7 @@ AGENTS.md                 # Short Codex lead-agent contract
 docs/harness/*            # Detailed protocols and runtime notes
 packages/harness/*        # Source-authoritative harness package
 packages/codex-config/*   # Source-authoritative Codex adapter package
+packages/codex-evals/*    # Codex-only eval package, not a runtime source authority
 ```
 
 Each skill is a folder, not a single large prompt. The standard layout is:
@@ -114,6 +116,21 @@ snapshot_stability = 1.0
 ```
 
 See `docs/validation-spine.md` for fixture and strategy extension rules.
+
+### Codex-Only Agent Evals
+
+Use this when checking whether the Codex adapter and custom-agent definitions are ready for controlled evaluation:
+
+```powershell
+npm run eval:codex:validate
+npm run eval:codex:static
+npm run eval:codex:smoke
+npm run eval:codex:dashboard
+```
+
+These commands are deterministic readiness gates. They validate dataset/schema integrity, real agent references, per-agent fixture coverage, runtime and sidecar markers, root/source materialization, anti-hype guardrails, and dashboard rendering. They do not prove live model task success or superiority over a baseline.
+
+Generated eval outputs go under `.codex-eval-runs/` and are ignored by git. Keep raw traces, dashboards, and reports local unless a separate publication decision promotes a sanitized summary.
 
 ### Project-Scoped Mode
 
