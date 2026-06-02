@@ -14,6 +14,7 @@
     "validate": "node scripts/validate-datasets.mjs",
     "static": "node scripts/run-static-eval.mjs --out .codex-eval-runs/latest-static",
     "smoke": "node scripts/run-codex-smoke.mjs --out .codex-eval-runs/latest-smoke",
-    "dashboard": "npm run smoke && node scripts/render-dashboard.mjs --summary .codex-eval-runs/latest-smoke/summary.json --out .codex-eval-runs/latest-smoke/dashboard.html"
+    "dashboard": "npm run smoke && node scripts/render-dashboard.mjs --summary .codex-eval-runs/latest-smoke/summary.json --out .codex-eval-runs/latest-smoke/dashboard.html",
+    "test": "node scripts/self-test.mjs"
   }
 }

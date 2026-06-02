@@ -23,6 +23,8 @@ npm run eval:codex:smoke
 npm run eval:codex:dashboard
 ```
 
+`npm run validate` also runs `test:codex-evals`, which exercises the schema and output-path guardrails with negative cases.
+
 Outputs are written under `.codex-eval-runs/`, which is ignored by git. Promote only sanitized summaries manually when there is a separate decision to publish them.
 
 ## What This Proves
