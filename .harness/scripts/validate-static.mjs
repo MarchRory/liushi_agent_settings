@@ -21,6 +21,10 @@ const checks = {
   codex_agent_files: 0,
   codex_agent_specificity_checks: 0,
   codex_agent_sidecar_specificity_checks: 0,
+  codex_agent_runtime_depth_checks: 0,
+  codex_agent_sidecar_depth_checks: 0,
+  codex_agent_workflow_depth_checks: 0,
+  codex_agent_role_specific_checks: 0,
   schema_files: 0,
   fixture_files: 0,
   eval_tasks: 0,
@@ -98,6 +102,46 @@ function validateSkillMetadata() {
 }
 
 function validateCodexAgents() {
+  const runtimeMarkers = [
+    "Specialized lane:",
+    "Trigger when:",
+    "Do not use when:",
+    "Reject / redirect:",
+    "Sharp deliverables:",
+    "Evidence requirements:",
+    "Completion gate:",
+  ];
+  const sidecarMarkers = [
+    "## Production Trigger Conditions",
+    "## Specialized Lane",
+    "## Reject / Redirect",
+    "## Operating Mode",
+    "## Role-Specific Playbooks",
+    "## Evidence Requirements",
+    "## Handoff Discipline",
+    "## Failure Modes This Agent Is Designed To Catch",
+    "## Sharp Deliverables",
+    "## Quality Bar",
+  ];
+  const workflowMarkers = [
+    "## Intake",
+    "## Role Procedure",
+    "## Evidence Rules",
+    "## Handoff and Escalation",
+    "## Refusal Conditions",
+    "## Completion Checklist",
+  ];
+  const roleSpecificTerms = {
+    architect: ["ADR", "compatibility matrix", "rollback surface"],
+    "codebase-explorer": ["entry point inventory", "source-authoritative", "unknowns ledger"],
+    critic: ["assumption ledger", "eval", "reversibility"],
+    implementer: ["patch surgeon", "source/materialized", "sync/generation"],
+    "memory-curator": ["authorization", "duplicate check", "sensitivity"],
+    researcher: ["source ladder", "recency", "frontier"],
+    reviewer: ["findings first", "severity", "validation coverage"],
+    tester: ["claim-to-evidence", "exit status", "residual risk"],
+  };
+
   for (const file of listFiles(join(codexSource, ".codex", "agents"), ".toml")) {
     checks.codex_agent_files += 1;
     const agent = parseToml(readText(file));
@@ -121,6 +165,12 @@ function validateCodexAgents() {
           failures.push(`${rel(file)}: developer_instructions missing specificity marker ${marker}`);
         }
       }
+      for (const marker of runtimeMarkers) {
+        checks.codex_agent_runtime_depth_checks += 1;
+        if (!agent.developer_instructions.includes(marker)) {
+          failures.push(`${rel(file)}: developer_instructions missing runtime depth marker ${marker}`);
+        }
+      }
     }
     const sidecar = join(codexSource, ".codex", "agents", name);
     for (const required of ["AGENT.md", "references/workflow.md", "references/output-schema.md", "examples/handoff.yaml", "examples/standard-output.yaml"]) {
@@ -135,6 +185,27 @@ function validateCodexAgents() {
           failures.push(`${rel(sidecarAgent)}: missing sidecar specificity section ${marker}`);
         }
       }
+      for (const marker of sidecarMarkers) {
+        checks.codex_agent_sidecar_depth_checks += 1;
+        if (!sidecarText.includes(marker)) failures.push(`${rel(sidecarAgent)}: missing production depth section ${marker}`);
+      }
+      if (sidecarText.length < 4000) failures.push(`${rel(sidecarAgent)}: sidecar guidance is too short for production role depth`);
+    }
+    const workflowPath = join(sidecar, "references", "workflow.md");
+    if (existsSync(workflowPath)) {
+      const workflowText = readText(workflowPath);
+      for (const marker of workflowMarkers) {
+        checks.codex_agent_workflow_depth_checks += 1;
+        if (!workflowText.includes(marker)) failures.push(`${rel(workflowPath)}: missing workflow depth section ${marker}`);
+      }
+      if (workflowText.length < 2500) failures.push(`${rel(workflowPath)}: workflow guidance is too short for production role depth`);
+    }
+    const combined = `${agent.developer_instructions ?? ""}\n${existsSync(sidecarAgent) ? readText(sidecarAgent) : ""}\n${
+      existsSync(join(sidecar, "references", "workflow.md")) ? readText(join(sidecar, "references", "workflow.md")) : ""
+    }`.toLowerCase();
+    for (const term of roleSpecificTerms[name] ?? []) {
+      checks.codex_agent_role_specific_checks += 1;
+      if (!combined.includes(term.toLowerCase())) failures.push(`${rel(sidecar)}: missing role-specific production term ${term}`);
     }
   }
 }
