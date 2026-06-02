@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import { getPaths, loadEvalTasks, loadKnownAgents, nowIso, readJson, rel } from "./lib.mjs";
+import { getPaths, loadEvalTasks, loadKnownAgents, nowIso, readJson, rel, validateJsonSchemaLite } from "./lib.mjs";
 
 const TASK_REQUIRED_FIELDS = [
   "id",
@@ -31,20 +31,22 @@ export function validateDatasets(options = {}) {
     task_records: 0,
     schema_files: 0,
     rubric_files: 0,
+    schema_contract_checks: 0,
+    schema_contract_passes: 0,
     known_agents: 0,
     role_references: 0,
     agent_references: 0,
     lead_only_cases: 0,
   };
 
-  const schemas = [
-    join(paths.schemasRoot, "codex-eval-task.schema.json"),
-    join(paths.schemasRoot, "codex-eval-summary.schema.json"),
-  ];
-  for (const schema of schemas) {
+  const taskSchemaPath = join(paths.schemasRoot, "codex-eval-task.schema.json");
+  const summarySchemaPath = join(paths.schemasRoot, "codex-eval-summary.schema.json");
+  let taskSchema = null;
+  for (const schema of [taskSchemaPath, summarySchemaPath]) {
     checks.schema_files += 1;
     try {
       const parsed = readJson(schema);
+      if (schema === taskSchemaPath) taskSchema = parsed;
       if (parsed.$schema !== "https://json-schema.org/draft/2020-12/schema") {
         failures.push(`${rel(paths.repoRoot, schema)}: schema must declare draft 2020-12`);
       }
@@ -82,6 +84,10 @@ export function validateDatasets(options = {}) {
   for (const { record: task, line, file } of loaded.tasks) {
     checks.task_records += 1;
     const prefix = `${rel(paths.repoRoot, file)}:${line}`;
+    checks.schema_contract_checks += 1;
+    const schemaFailures = taskSchema ? validateJsonSchemaLite(task, taskSchema, prefix) : [`${prefix}: task schema could not be loaded`];
+    if (schemaFailures.length === 0) checks.schema_contract_passes += 1;
+    else failures.push(...schemaFailures);
     for (const field of TASK_REQUIRED_FIELDS) {
       if (!(field in task)) failures.push(`${prefix}: missing ${field}`);
     }

@@ -10,6 +10,7 @@ import {
   readJson,
   resolveRepoPath,
   scoreRate,
+  validateJsonSchemaLite,
   writeJson,
 } from "./lib.mjs";
 import { validateDatasets } from "./validate-datasets.mjs";
@@ -50,7 +51,7 @@ function runSmoke(options = {}) {
   };
   scores.codex_only_smoke_readiness = Math.min(...Object.values(scores));
 
-  return {
+  const summary = {
     run_type: "codex-only-deterministic-smoke-v0.1",
     timestamp: nowIso(),
     configuration: "packages/codex-config/src/.codex",
@@ -99,6 +100,13 @@ function runSmoke(options = {}) {
     ],
     final_status: failures.length === 0 && scores.codex_only_smoke_readiness === 1 ? "pass" : "fail",
   };
+  const summarySchema = readJson(join(paths.schemasRoot, "codex-eval-summary.schema.json"));
+  const summarySchemaFailures = validateJsonSchemaLite(summary, summarySchema, "smoke_summary");
+  if (summarySchemaFailures.length > 0) {
+    summary.failures.push(...summarySchemaFailures);
+    summary.final_status = "fail";
+  }
+  return summary;
 }
 
 function main() {
