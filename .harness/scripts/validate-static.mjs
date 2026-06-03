@@ -26,7 +26,6 @@ const checks = {
   codex_agent_workflow_depth_checks: 0,
   codex_agent_role_specific_checks: 0,
   codex_hook_files: 0,
-  codex_hook_source_files: 0,
   codex_hook_event_checks: 0,
   codex_hook_test_files: 0,
   codex_hook_config_checks: 0,
@@ -245,17 +244,17 @@ function validateCodexHooks() {
           if (hook[field] === undefined || hook[field] === "") failures.push(`${prefix}: hook missing ${field}`);
         }
         if (hook.type !== "command") failures.push(`${prefix}: hook type must be command`);
-        const scriptMatch = String(hook.command ?? "").match(/\.codex\/hooks\/([^"]+\.mjs)/u);
+        const scriptMatch = String(hook.command ?? "").match(/\.codex\/hooks\/([^"]+\.ts)/u);
         checks.codex_hook_config_checks += 1;
         if (!scriptMatch) {
-          failures.push(`${prefix}: command must reference .codex/hooks/*.mjs`);
+          failures.push(`${prefix}: command must reference .codex/hooks/*.ts`);
         } else if (!existsSync(join(codexSource, ".codex", "hooks", scriptMatch[1]))) {
           failures.push(`${prefix}: command references missing hook script ${scriptMatch[1]}`);
         }
-        const windowsScriptMatch = String(hook.commandWindows ?? "").match(/\.codex\/hooks\/([^'"]+\.mjs)/u);
+        const windowsScriptMatch = String(hook.commandWindows ?? "").match(/\.codex\/hooks\/([^'"]+\.ts)/u);
         checks.codex_hook_config_checks += 1;
         if (!windowsScriptMatch) {
-          failures.push(`${prefix}: commandWindows must reference .codex/hooks/*.mjs`);
+          failures.push(`${prefix}: commandWindows must reference .codex/hooks/*.ts`);
         } else if (!existsSync(join(codexSource, ".codex", "hooks", windowsScriptMatch[1]))) {
           failures.push(`${prefix}: commandWindows references missing hook script ${windowsScriptMatch[1]}`);
         }
@@ -264,25 +263,9 @@ function validateCodexHooks() {
   }
 
   for (const required of [
-    "lib/read-stdin-json.mjs",
-    "lib/policy-loader.mjs",
-    "lib/types.mjs",
-    "lib/hook-response.mjs",
-    "lib/tool-classifier.mjs",
-    "lib/text-patterns.mjs",
-    "pre_tool_use_policy.mjs",
-    "permission_request_policy.mjs",
-    "subagent_start_context.mjs",
-    "subagent_stop_schema_gate.mjs",
-    "stop_validation_gate.mjs",
-  ]) {
-    checks.codex_hook_files += 1;
-    if (!existsSync(join(codexSource, ".codex", "hooks", required))) failures.push(`packages/codex-config/src/.codex/hooks: missing ${required}`);
-  }
-
-  for (const required of [
     "lib/read-stdin-json.ts",
     "lib/policy-loader.ts",
+    "lib/run-main.ts",
     "lib/types.ts",
     "lib/hook-response.ts",
     "lib/tool-classifier.ts",
@@ -293,17 +276,19 @@ function validateCodexHooks() {
     "subagent_stop_schema_gate.ts",
     "stop_validation_gate.ts",
   ]) {
-    checks.codex_hook_source_files += 1;
-    if (!existsSync(join(codexSource, ".codex", "hooks-src", required))) failures.push(`packages/codex-config/src/.codex/hooks-src: missing ${required}`);
+    checks.codex_hook_files += 1;
+    if (!existsSync(join(codexSource, ".codex", "hooks", required))) failures.push(`packages/codex-config/src/.codex/hooks: missing ${required}`);
   }
+  if (existsSync(join(codexSource, ".codex", "hooks-src"))) failures.push("packages/codex-config/src/.codex/hooks-src: hooks-src is not allowed; use .codex/hooks TypeScript source only");
+  for (const file of listFiles(join(codexSource, ".codex", "hooks"), ".mjs")) failures.push(`${rel(file)}: generated JavaScript hook runtime is not allowed`);
 
   for (const required of [
-    "pre-tool-use-policy.test.mjs",
-    "permission-request-policy.test.mjs",
-    "subagent-start-context.test.mjs",
-    "subagent-stop-schema-gate.test.mjs",
-    "stop-validation-gate.test.mjs",
-    "installed-target-smoke.test.mjs",
+    "pre-tool-use-policy.test.ts",
+    "permission-request-policy.test.ts",
+    "subagent-start-context.test.ts",
+    "subagent-stop-schema-gate.test.ts",
+    "stop-validation-gate.test.ts",
+    "installed-target-smoke.test.ts",
   ]) {
     checks.codex_hook_test_files += 1;
     if (!existsSync(join(repoRoot, "packages", "harness", "tests", "hooks", required))) failures.push(`packages/harness/tests/hooks: missing ${required}`);
@@ -315,7 +300,7 @@ function validateCodexHooks() {
 function validatePackageScripts() {
   const packageJson = readJson(join(repoRoot, "package.json"));
   const scripts = packageJson?.scripts ?? {};
-  for (const required of ["build:hooks", "check:hooks", "test:hooks", "validate"]) {
+  for (const required of ["check:hooks", "test:hooks", "validate"]) {
     checks.package_script_checks += 1;
     if (typeof scripts[required] !== "string" || scripts[required].length === 0) failures.push(`package.json: missing script ${required}`);
   }
@@ -323,15 +308,13 @@ function validatePackageScripts() {
   if (!scripts.validate?.includes("npm run check:hooks")) failures.push("package.json: validate must include npm run check:hooks");
   checks.package_script_checks += 1;
   if (!scripts.validate?.includes("npm run test:hooks")) failures.push("package.json: validate must include npm run test:hooks");
-  checks.package_script_checks += 1;
-  if (!scripts["test:hooks"]?.includes("npm run build:hooks")) failures.push("package.json: test:hooks must build hook runtime before tests");
   for (const requiredTest of [
-    "pre-tool-use-policy.test.mjs",
-    "permission-request-policy.test.mjs",
-    "subagent-start-context.test.mjs",
-    "subagent-stop-schema-gate.test.mjs",
-    "stop-validation-gate.test.mjs",
-    "installed-target-smoke.test.mjs",
+    "pre-tool-use-policy.test.ts",
+    "permission-request-policy.test.ts",
+    "subagent-start-context.test.ts",
+    "subagent-stop-schema-gate.test.ts",
+    "stop-validation-gate.test.ts",
+    "installed-target-smoke.test.ts",
   ]) {
     checks.package_script_checks += 1;
     if (!scripts["test:hooks"]?.includes(requiredTest)) failures.push(`package.json: test:hooks must run ${requiredTest}`);

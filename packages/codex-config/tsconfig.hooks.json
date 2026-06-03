@@ -1,17 +1,18 @@
 {
   "compilerOptions": {
     "allowJs": false,
+    "allowImportingTsExtensions": true,
     "declaration": false,
     "lib": ["ES2023"],
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
+    "noEmit": true,
     "noEmitOnError": true,
-    "outDir": "src/.codex/hooks",
-    "rootDir": "src/.codex/hooks-src",
+    "rootDir": "src/.codex/hooks",
     "strict": true,
     "target": "ES2023",
     "types": ["node"],
     "verbatimModuleSyntax": true
   },
-  "include": ["src/.codex/hooks-src/**/*.ts"]
+  "include": ["src/.codex/hooks/**/*.ts"]
 }

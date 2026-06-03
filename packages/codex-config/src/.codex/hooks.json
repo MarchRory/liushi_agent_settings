@@ -6,8 +6,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"$(git rev-parse --show-toplevel)/.codex/hooks/pre_tool_use_policy.mjs\"",
-            "commandWindows": "powershell.exe -NoProfile -ExecutionPolicy Bypass -Command \"node ((git rev-parse --show-toplevel) + '/.codex/hooks/pre_tool_use_policy.mjs')\"",
+            "command": "\"$(git rev-parse --show-toplevel)/node_modules/.bin/tsx\" \"$(git rev-parse --show-toplevel)/.codex/hooks/pre_tool_use_policy.ts\"",
+            "commandWindows": "powershell.exe -NoProfile -ExecutionPolicy Bypass -Command \"& ((git rev-parse --show-toplevel) + '/node_modules/.bin/tsx.cmd') ((git rev-parse --show-toplevel) + '/.codex/hooks/pre_tool_use_policy.ts')\"",
             "timeout": 30,
             "statusMessage": "Checking tool policy"
           }
@@ -20,8 +20,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"$(git rev-parse --show-toplevel)/.codex/hooks/permission_request_policy.mjs\"",
-            "commandWindows": "powershell.exe -NoProfile -ExecutionPolicy Bypass -Command \"node ((git rev-parse --show-toplevel) + '/.codex/hooks/permission_request_policy.mjs')\"",
+            "command": "\"$(git rev-parse --show-toplevel)/node_modules/.bin/tsx\" \"$(git rev-parse --show-toplevel)/.codex/hooks/permission_request_policy.ts\"",
+            "commandWindows": "powershell.exe -NoProfile -ExecutionPolicy Bypass -Command \"& ((git rev-parse --show-toplevel) + '/node_modules/.bin/tsx.cmd') ((git rev-parse --show-toplevel) + '/.codex/hooks/permission_request_policy.ts')\"",
             "timeout": 30,
             "statusMessage": "Checking approval policy"
           }
@@ -34,8 +34,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"$(git rev-parse --show-toplevel)/.codex/hooks/subagent_start_context.mjs\"",
-            "commandWindows": "powershell.exe -NoProfile -ExecutionPolicy Bypass -Command \"node ((git rev-parse --show-toplevel) + '/.codex/hooks/subagent_start_context.mjs')\"",
+            "command": "\"$(git rev-parse --show-toplevel)/node_modules/.bin/tsx\" \"$(git rev-parse --show-toplevel)/.codex/hooks/subagent_start_context.ts\"",
+            "commandWindows": "powershell.exe -NoProfile -ExecutionPolicy Bypass -Command \"& ((git rev-parse --show-toplevel) + '/node_modules/.bin/tsx.cmd') ((git rev-parse --show-toplevel) + '/.codex/hooks/subagent_start_context.ts')\"",
             "timeout": 30,
             "statusMessage": "Injecting specialist contract"
           }
@@ -48,8 +48,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"$(git rev-parse --show-toplevel)/.codex/hooks/subagent_stop_schema_gate.mjs\"",
-            "commandWindows": "powershell.exe -NoProfile -ExecutionPolicy Bypass -Command \"node ((git rev-parse --show-toplevel) + '/.codex/hooks/subagent_stop_schema_gate.mjs')\"",
+            "command": "\"$(git rev-parse --show-toplevel)/node_modules/.bin/tsx\" \"$(git rev-parse --show-toplevel)/.codex/hooks/subagent_stop_schema_gate.ts\"",
+            "commandWindows": "powershell.exe -NoProfile -ExecutionPolicy Bypass -Command \"& ((git rev-parse --show-toplevel) + '/node_modules/.bin/tsx.cmd') ((git rev-parse --show-toplevel) + '/.codex/hooks/subagent_stop_schema_gate.ts')\"",
             "timeout": 30,
             "statusMessage": "Checking specialist output"
           }
@@ -61,8 +61,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"$(git rev-parse --show-toplevel)/.codex/hooks/stop_validation_gate.mjs\"",
-            "commandWindows": "powershell.exe -NoProfile -ExecutionPolicy Bypass -Command \"node ((git rev-parse --show-toplevel) + '/.codex/hooks/stop_validation_gate.mjs')\"",
+            "command": "\"$(git rev-parse --show-toplevel)/node_modules/.bin/tsx\" \"$(git rev-parse --show-toplevel)/.codex/hooks/stop_validation_gate.ts\"",
+            "commandWindows": "powershell.exe -NoProfile -ExecutionPolicy Bypass -Command \"& ((git rev-parse --show-toplevel) + '/node_modules/.bin/tsx.cmd') ((git rev-parse --show-toplevel) + '/.codex/hooks/stop_validation_gate.ts')\"",
             "timeout": 30,
             "statusMessage": "Checking final response"
           }

@@ -28,7 +28,6 @@ monorepo:
         - ".codex/agents/"
         - ".codex/hooks.json"
         - ".codex/hooks/"
-        - ".codex/hooks-src/"
   materialized_root_targets:
     - "AGENTS.md"
     - ".agents/"
@@ -50,7 +49,7 @@ runtime_entrypoints:
   codex_config: ".codex/config.toml"
   codex_agents_glob: ".codex/agents/*.toml"
   codex_hooks: ".codex/hooks.json"
-  codex_hook_source: ".codex/hooks-src/"
+  codex_hook_source: ".codex/hooks/"
 
 codex_agents:
   - name: "architect"

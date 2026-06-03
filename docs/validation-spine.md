@@ -36,7 +36,7 @@ npm run check:hooks
 npm run test:hooks
 ```
 
-Hook source lives in `packages/codex-config/src/.codex/hooks-src/**/*.ts`. `npm run test:hooks` first builds the generated Codex runtime files under `packages/codex-config/src/.codex/hooks/**/*.mjs`, then runs deterministic simulated hook-event tests plus an installed-target smoke test.
+Hook source and runtime live only in `packages/codex-config/src/.codex/hooks/**/*.ts`. `npm run test:hooks` runs deterministic simulated hook-event tests plus an installed-target smoke test through the project-local `tsx` runner.
 
 ## Quantitative Gates
 

@@ -33,8 +33,7 @@ AGENTS.md                 # Short Codex lead-agent contract
 .codex/agents/README.md   # Codex agent discovery layout guide
 .codex/agents/<name>/*    # Sidecar docs/examples for each preset agent
 .codex/hooks.json         # Codex lifecycle hook registration
-.codex/hooks/*            # Runtime guardrails for tools, subagents, and final delivery
-.codex/hooks-src/*        # TypeScript source for generated hook runtime files
+.codex/hooks/*            # TypeScript runtime guardrails for tools, subagents, and final delivery
 .agents/skills/*          # Portable skill modules with references/examples
 .harness/policies/*       # Safety, validation, and memory gates
 .harness/policies/context-governance.yaml # Context, memory, and self-evolution gates
@@ -88,7 +87,9 @@ npm run check:hooks
 npm run test:hooks
 ```
 
-Hook runtime source is maintained in `packages/codex-config/src/.codex/hooks-src/**/*.ts`. `npm run build:hooks` compiles it into `packages/codex-config/src/.codex/hooks/**/*.mjs`, which is the Codex-executed runtime surface. After editing hook TS source, run `npm run build:hooks`, then `npm run sync` to refresh the root materialized `.codex/hooks/**` copy.
+Hook runtime source is maintained only in `packages/codex-config/src/.codex/hooks/**/*.ts`. The root `.codex/hooks/**/*.ts` files are materialized copies for Codex discovery. After editing hook TS source, run `npm run sync` to refresh the root copy.
+
+Codex executes these hooks through the project-local `node_modules/.bin/tsx` runner. For project-scoped installs, run `npm install -D tsx typescript` or otherwise provide an equivalent local `tsx` runner before enabling hooks.
 
 `npm run validate` includes both the hook TypeScript check and hook behavior test gate.
 
