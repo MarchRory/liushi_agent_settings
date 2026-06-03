@@ -25,6 +25,13 @@ const checks = {
   codex_agent_sidecar_depth_checks: 0,
   codex_agent_workflow_depth_checks: 0,
   codex_agent_role_specific_checks: 0,
+  codex_hook_files: 0,
+  codex_hook_source_files: 0,
+  codex_hook_event_checks: 0,
+  codex_hook_test_files: 0,
+  codex_hook_config_checks: 0,
+  package_script_checks: 0,
+  policy_shape_checks: 0,
   schema_files: 0,
   fixture_files: 0,
   eval_tasks: 0,
@@ -45,6 +52,8 @@ validateYamlFiles([
 ]);
 validateSkillMetadata();
 validateCodexAgents();
+validateCodexHooks();
+validatePackageScripts();
 validateJsonSchemas();
 validateFixtureFiles();
 validateEvalTasks();
@@ -210,6 +219,163 @@ function validateCodexAgents() {
   }
 }
 
+function validateCodexHooks() {
+  const hooksPath = join(codexSource, ".codex", "hooks.json");
+  checks.codex_hook_files += 1;
+  const hooksConfig = readJson(hooksPath);
+  if (!hooksConfig) return;
+  const hooks = hooksConfig.hooks;
+  if (!hooks || typeof hooks !== "object") {
+    failures.push(`${rel(hooksPath)}: missing hooks object`);
+    return;
+  }
+  for (const eventName of ["PreToolUse", "PermissionRequest", "SubagentStart", "SubagentStop", "Stop"]) {
+    checks.codex_hook_event_checks += 1;
+    if (!Array.isArray(hooks[eventName]) || hooks[eventName].length === 0) {
+      failures.push(`${rel(hooksPath)}: missing hook event ${eventName}`);
+      continue;
+    }
+    for (const entry of hooks[eventName]) {
+      checks.codex_hook_config_checks += 1;
+      if (!Array.isArray(entry.hooks) || entry.hooks.length === 0) failures.push(`${rel(hooksPath)}#${eventName}: hooks must be a non-empty array`);
+      for (const hook of entry.hooks ?? []) {
+        const prefix = `${rel(hooksPath)}#${eventName}`;
+        for (const field of ["type", "command", "commandWindows", "timeout", "statusMessage"]) {
+          checks.codex_hook_config_checks += 1;
+          if (hook[field] === undefined || hook[field] === "") failures.push(`${prefix}: hook missing ${field}`);
+        }
+        if (hook.type !== "command") failures.push(`${prefix}: hook type must be command`);
+        const scriptMatch = String(hook.command ?? "").match(/\.codex\/hooks\/([^"]+\.mjs)/u);
+        checks.codex_hook_config_checks += 1;
+        if (!scriptMatch) {
+          failures.push(`${prefix}: command must reference .codex/hooks/*.mjs`);
+        } else if (!existsSync(join(codexSource, ".codex", "hooks", scriptMatch[1]))) {
+          failures.push(`${prefix}: command references missing hook script ${scriptMatch[1]}`);
+        }
+        const windowsScriptMatch = String(hook.commandWindows ?? "").match(/\.codex\/hooks\/([^'"]+\.mjs)/u);
+        checks.codex_hook_config_checks += 1;
+        if (!windowsScriptMatch) {
+          failures.push(`${prefix}: commandWindows must reference .codex/hooks/*.mjs`);
+        } else if (!existsSync(join(codexSource, ".codex", "hooks", windowsScriptMatch[1]))) {
+          failures.push(`${prefix}: commandWindows references missing hook script ${windowsScriptMatch[1]}`);
+        }
+      }
+    }
+  }
+
+  for (const required of [
+    "lib/read-stdin-json.mjs",
+    "lib/policy-loader.mjs",
+    "lib/types.mjs",
+    "lib/hook-response.mjs",
+    "lib/tool-classifier.mjs",
+    "lib/text-patterns.mjs",
+    "pre_tool_use_policy.mjs",
+    "permission_request_policy.mjs",
+    "subagent_start_context.mjs",
+    "subagent_stop_schema_gate.mjs",
+    "stop_validation_gate.mjs",
+  ]) {
+    checks.codex_hook_files += 1;
+    if (!existsSync(join(codexSource, ".codex", "hooks", required))) failures.push(`packages/codex-config/src/.codex/hooks: missing ${required}`);
+  }
+
+  for (const required of [
+    "lib/read-stdin-json.ts",
+    "lib/policy-loader.ts",
+    "lib/types.ts",
+    "lib/hook-response.ts",
+    "lib/tool-classifier.ts",
+    "lib/text-patterns.ts",
+    "pre_tool_use_policy.ts",
+    "permission_request_policy.ts",
+    "subagent_start_context.ts",
+    "subagent_stop_schema_gate.ts",
+    "stop_validation_gate.ts",
+  ]) {
+    checks.codex_hook_source_files += 1;
+    if (!existsSync(join(codexSource, ".codex", "hooks-src", required))) failures.push(`packages/codex-config/src/.codex/hooks-src: missing ${required}`);
+  }
+
+  for (const required of [
+    "pre-tool-use-policy.test.mjs",
+    "permission-request-policy.test.mjs",
+    "subagent-start-context.test.mjs",
+    "subagent-stop-schema-gate.test.mjs",
+    "stop-validation-gate.test.mjs",
+    "installed-target-smoke.test.mjs",
+  ]) {
+    checks.codex_hook_test_files += 1;
+    if (!existsSync(join(repoRoot, "packages", "harness", "tests", "hooks", required))) failures.push(`packages/harness/tests/hooks: missing ${required}`);
+  }
+
+  validatePolicyShapeForHooks();
+}
+
+function validatePackageScripts() {
+  const packageJson = readJson(join(repoRoot, "package.json"));
+  const scripts = packageJson?.scripts ?? {};
+  for (const required of ["build:hooks", "check:hooks", "test:hooks", "validate"]) {
+    checks.package_script_checks += 1;
+    if (typeof scripts[required] !== "string" || scripts[required].length === 0) failures.push(`package.json: missing script ${required}`);
+  }
+  checks.package_script_checks += 1;
+  if (!scripts.validate?.includes("npm run check:hooks")) failures.push("package.json: validate must include npm run check:hooks");
+  checks.package_script_checks += 1;
+  if (!scripts.validate?.includes("npm run test:hooks")) failures.push("package.json: validate must include npm run test:hooks");
+  checks.package_script_checks += 1;
+  if (!scripts["test:hooks"]?.includes("npm run build:hooks")) failures.push("package.json: test:hooks must build hook runtime before tests");
+  for (const requiredTest of [
+    "pre-tool-use-policy.test.mjs",
+    "permission-request-policy.test.mjs",
+    "subagent-start-context.test.mjs",
+    "subagent-stop-schema-gate.test.mjs",
+    "stop-validation-gate.test.mjs",
+    "installed-target-smoke.test.mjs",
+  ]) {
+    checks.package_script_checks += 1;
+    if (!scripts["test:hooks"]?.includes(requiredTest)) failures.push(`package.json: test:hooks must run ${requiredTest}`);
+  }
+}
+
+function validatePolicyShapeForHooks() {
+  const safetyPath = join(harnessSource, ".harness", "policies", "safety.yaml");
+  const safetyPolicy = readYaml(safetyPath)?.safety_policy;
+  const safetyRequiredArrays = [
+    "sensitive_paths",
+    "sensitive_domains",
+    "gates.preflight_required_for",
+    "gates.blocked_without_approval",
+    "gates.approval_record_required_fields",
+    "destructive_command_patterns.filesystem",
+    "destructive_command_patterns.git",
+    "destructive_command_patterns.containers_and_cloud",
+  ];
+  for (const path of safetyRequiredArrays) {
+    checks.policy_shape_checks += 1;
+    if (!Array.isArray(getByPath(safetyPolicy, path)) || getByPath(safetyPolicy, path).length === 0) {
+      failures.push(`${rel(safetyPath)}: missing non-empty ${path}`);
+    }
+  }
+
+  const validationPath = join(harnessSource, ".harness", "policies", "validation.yaml");
+  const validationPolicy = readYaml(validationPath)?.validation_policy;
+  for (const path of [
+    "default.after_code_change.mandatory_when_available",
+    "default.after_documentation_change.mandatory_when_available",
+    "default.after_config_change.mandatory_when_available",
+    "gates.block_delivery_when",
+    "gates.requires_override_record_when",
+    "reporting.required_fields",
+    "not_run_requires",
+  ]) {
+    checks.policy_shape_checks += 1;
+    if (!Array.isArray(getByPath(validationPolicy, path)) || getByPath(validationPolicy, path).length === 0) {
+      failures.push(`${rel(validationPath)}: missing non-empty ${path}`);
+    }
+  }
+}
+
 function validateJsonSchemas() {
   const schemasDir = join(orchestrationRoot, "schemas");
   for (const file of listFiles(schemasDir, ".json")) {
@@ -352,6 +518,10 @@ function readYaml(path) {
     failures.push(`${rel(path)}: invalid YAML: ${error.message}`);
     return null;
   }
+}
+
+function getByPath(value, path) {
+  return path.split(".").reduce((current, segment) => current?.[segment], value);
 }
 
 function listFiles(root, extension) {

@@ -26,6 +26,9 @@ monorepo:
       owns:
         - ".codex/config.toml"
         - ".codex/agents/"
+        - ".codex/hooks.json"
+        - ".codex/hooks/"
+        - ".codex/hooks-src/"
   materialized_root_targets:
     - "AGENTS.md"
     - ".agents/"
@@ -46,6 +49,8 @@ runtime_entrypoints:
   root_instruction: "AGENTS.md"
   codex_config: ".codex/config.toml"
   codex_agents_glob: ".codex/agents/*.toml"
+  codex_hooks: ".codex/hooks.json"
+  codex_hook_source: ".codex/hooks-src/"
 
 codex_agents:
   - name: "architect"
@@ -168,6 +173,8 @@ install:
 verification:
   commands:
     - "npm run check:sync"
+    - "npm run check:hooks"
+    - "npm run test:hooks"
     - "npm run validate"
     - "npm run validate:static"
     - "npm --workspace multi-agent-orchestration-skill run fixtures"

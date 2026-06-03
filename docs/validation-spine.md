@@ -16,6 +16,7 @@ This command installs the orchestration skill dependencies and runs:
 - package-to-root materialization drift check
 - static TOML/YAML/JSON/frontmatter checks for harness configuration
 - Codex agent sidecar layout checks
+- Codex hook TypeScript typecheck and generated-runtime behavior tests
 - TypeScript typecheck for `multi-agent-orchestration`
 - strategy registry validation
 - activation examples
@@ -27,6 +28,15 @@ For a faster static-only pass:
 ```powershell
 npm run validate:static
 ```
+
+For hook-only work:
+
+```powershell
+npm run check:hooks
+npm run test:hooks
+```
+
+Hook source lives in `packages/codex-config/src/.codex/hooks-src/**/*.ts`. `npm run test:hooks` first builds the generated Codex runtime files under `packages/codex-config/src/.codex/hooks/**/*.mjs`, then runs deterministic simulated hook-event tests plus an installed-target smoke test.
 
 ## Quantitative Gates
 
