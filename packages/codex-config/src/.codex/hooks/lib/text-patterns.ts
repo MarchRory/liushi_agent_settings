@@ -29,6 +29,7 @@ export function normalizePath(value: unknown): string {
 export function matchesGlobLike(path: string, pattern: string): boolean {
   const normalizedPath = normalizePath(path).toLowerCase();
   const normalizedPattern = normalizePath(pattern).toLowerCase();
+  if (normalizedPattern.startsWith("**/") && matchesGlobLike(normalizedPath, normalizedPattern.slice(3))) return true;
   if (normalizedPattern.includes("**")) return globToRegex(normalizedPattern).test(normalizedPath);
   if (normalizedPattern.includes("*")) return globToRegex(normalizedPattern).test(normalizedPath);
   return normalizedPath === normalizedPattern || normalizedPath.endsWith(`/${normalizedPattern}`);

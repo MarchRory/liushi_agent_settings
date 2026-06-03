@@ -18,6 +18,22 @@ const deniedSensitiveWrite = runHook("pre_tool_use_policy.ts", {
 assert.equal(deniedSensitiveWrite.hookSpecificOutput.permissionDecision, "deny");
 assert.match(deniedSensitiveWrite.hookSpecificOutput.permissionDecisionReason, /sensitive path/iu);
 
+const deniedRootSecretWrite = runHook("pre_tool_use_policy.ts", {
+  hookEventName: "PreToolUse",
+  tool_name: "Write",
+  tool_input: { path: "secret.txt" },
+});
+assert.equal(deniedRootSecretWrite.hookSpecificOutput.permissionDecision, "deny");
+assert.match(deniedRootSecretWrite.hookSpecificOutput.permissionDecisionReason, /sensitive path/iu);
+
+const deniedRootCredentialWrite = runHook("pre_tool_use_policy.ts", {
+  hookEventName: "PreToolUse",
+  tool_name: "Write",
+  tool_input: { path: "credential.json" },
+});
+assert.equal(deniedRootCredentialWrite.hookSpecificOutput.permissionDecision, "deny");
+assert.match(deniedRootCredentialWrite.hookSpecificOutput.permissionDecisionReason, /sensitive path/iu);
+
 const deniedPolicyWrite = runHook("pre_tool_use_policy.ts", {
   hookEventName: "PreToolUse",
   tool_name: "Write",
@@ -41,4 +57,4 @@ const allowedValidation = runHook("pre_tool_use_policy.ts", {
 });
 assert.deepEqual(allowedValidation, {});
 
-console.log(JSON.stringify({ valid: true, tests: 5 }, null, 2));
+console.log(JSON.stringify({ valid: true, tests: 7 }, null, 2));
