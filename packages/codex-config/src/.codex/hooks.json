@@ -1,0 +1,73 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|apply_patch|Edit|Write|mcp__.*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$(git rev-parse --show-toplevel)/.codex/hooks/pre_tool_use_policy.mjs\"",
+            "commandWindows": "powershell.exe -NoProfile -ExecutionPolicy Bypass -Command \"node ((git rev-parse --show-toplevel) + '/.codex/hooks/pre_tool_use_policy.mjs')\"",
+            "timeout": 30,
+            "statusMessage": "Checking tool policy"
+          }
+        ]
+      }
+    ],
+    "PermissionRequest": [
+      {
+        "matcher": "Bash|apply_patch|Edit|Write|mcp__.*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$(git rev-parse --show-toplevel)/.codex/hooks/permission_request_policy.mjs\"",
+            "commandWindows": "powershell.exe -NoProfile -ExecutionPolicy Bypass -Command \"node ((git rev-parse --show-toplevel) + '/.codex/hooks/permission_request_policy.mjs')\"",
+            "timeout": 30,
+            "statusMessage": "Checking approval policy"
+          }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "matcher": "reviewer|tester|critic|architect|implementer|researcher|memory-curator|codebase-explorer",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$(git rev-parse --show-toplevel)/.codex/hooks/subagent_start_context.mjs\"",
+            "commandWindows": "powershell.exe -NoProfile -ExecutionPolicy Bypass -Command \"node ((git rev-parse --show-toplevel) + '/.codex/hooks/subagent_start_context.mjs')\"",
+            "timeout": 30,
+            "statusMessage": "Injecting specialist contract"
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "matcher": "reviewer|tester|critic|architect|implementer|researcher|memory-curator|codebase-explorer",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$(git rev-parse --show-toplevel)/.codex/hooks/subagent_stop_schema_gate.mjs\"",
+            "commandWindows": "powershell.exe -NoProfile -ExecutionPolicy Bypass -Command \"node ((git rev-parse --show-toplevel) + '/.codex/hooks/subagent_stop_schema_gate.mjs')\"",
+            "timeout": 30,
+            "statusMessage": "Checking specialist output"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$(git rev-parse --show-toplevel)/.codex/hooks/stop_validation_gate.mjs\"",
+            "commandWindows": "powershell.exe -NoProfile -ExecutionPolicy Bypass -Command \"node ((git rev-parse --show-toplevel) + '/.codex/hooks/stop_validation_gate.mjs')\"",
+            "timeout": 30,
+            "statusMessage": "Checking final response"
+          }
+        ]
+      }
+    ]
+  }
+}

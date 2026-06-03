@@ -4,7 +4,12 @@
   "private": true,
   "type": "module",
   "files": [
-    "src"
+    "src",
+    "scripts",
+    "tsconfig.hooks.json"
   ],
-  "scripts": {}
+  "scripts": {
+    "build:hooks": "tsc -p tsconfig.hooks.json && node scripts/fix-hook-output-extensions.mjs",
+    "check:hooks": "tsc -p tsconfig.hooks.json --noEmit"
+  }
 }
